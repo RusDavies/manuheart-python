@@ -41,3 +41,9 @@ Implication: the next compatibility work should compare localhost Bash-vs-Python
 Russ decided to **go cleaner from the get-go**.
 
 Implication: Bash output should be used as a compatibility reference, but Python does not need to preserve ugly legacy output details as the default. The default Python report format should prefer clean typed JSON where practical. If strict legacy report compatibility is needed later, add it as an explicit compatibility mode rather than making all users inherit Bash-shaped scars.
+
+## Report-format implementation priority
+
+Russ decided the next implementation priority should be **clean typed report output first**.
+
+Implication: add or revise the default Python report serialization so fields that are naturally numeric or boolean are emitted as typed JSON values, while preserving clear names and stable structure. A legacy-compatible report mode can be considered after the clean default is established.
