@@ -70,7 +70,9 @@ manuheart-python/
 │   └── localhost/
 │       ├── manuheart.conf
 │       ├── groups
-│       └── hosts
+│       ├── hosts
+│       ├── manuheart.json
+│       └── manuheart.yaml
 ├── src/
 │   └── manuheart/
 │       ├── __init__.py
@@ -104,9 +106,13 @@ Recommended CLI:
 
 ```bash
 manuheart check --config ./etc/manuheart/manuheart.conf --var-dir ./var/manuheart
+manuheart check --config ./etc/manuheart/manuheart.json
+manuheart check --config ./etc/manuheart/manuheart.yaml
 manuheart daemon --config ./etc/manuheart/manuheart.conf --check-period 30
 manuheart validate-config --config ./etc/manuheart/manuheart.conf
 ```
+
+The CLI should infer config format from extension by default, with an optional explicit override such as `--config-format legacy|json|yaml` for unusual file names.
 
 For Bash compatibility, also allow:
 
@@ -140,14 +146,23 @@ Use dataclasses or Pydantic. For this internal tool, standard-library dataclasse
 Loads and validates:
 
 - defaults;
-- main `KEY: value` config file;
-- CLI overrides;
-- group definitions;
-- host definitions.
+- legacy main `KEY: value` config file;
+- legacy pipe-delimited group and host files;
+- structured JSON configuration;
+- structured YAML configuration, if PyYAML is installed;
+- CLI overrides.
 
-It should return an explicit `EffectiveConfig` plus parsed definitions and a list of warnings. Invalid records should usually be skipped with warnings to preserve Bash behavior.
+It should return an explicit `EffectiveConfig` plus parsed definitions and a list of warnings. Invalid legacy records should usually be skipped with warnings to preserve Bash behavior. Structured JSON/YAML should be stricter by default because users choosing structured config are asking for less shell-era ambiguity, not a more decorative failure mode.
 
-Important compatibility rules:
+Recommended design:
+
+- `ConfigLoader` interface that returns one normalized `LoadedConfiguration` model.
+- `LegacyConfigLoader` for drop-in compatibility with `manuheart.conf` + separate `groups`/`hosts` files.
+- `JsonConfigLoader` for a single structured JSON file.
+- `YamlConfigLoader` for a single structured YAML file.
+- Shared validation/normalization after format-specific parsing so all formats feed the same domain models.
+
+Important legacy compatibility rules:
 
 - strip comments like the Bash parser: leading `#`, and whitespace-before-`#` inline comments;
 - preserve `#` inside URLs/fragments;
@@ -157,6 +172,43 @@ Important compatibility rules:
 - warn/ignore duplicate group names;
 - warn/ignore duplicate `group/host` records;
 - validate host group references after groups are loaded.
+
+Structured JSON/YAML should use the same logical model, for example:
+
+```yaml
+runtime:
+  var_dir: ./var/manuheart
+  check_period: 30
+  status_files:
+    hosts: ./var/manuheart/status/hoststatus
+    groups: ./var/manuheart/status/groupstatus
+    systems: ./var/manuheart/status/sysstatus
+checks:
+  http:
+    connect_timeout: 3
+    max_time: 5
+groups:
+  - name: elasticsearch-host
+    system: elasticsearch
+    critical: true
+    type: icmp
+    min_count: 1
+    failure_grace: 3
+hosts:
+  - name: burns
+    group: elasticsearch-host
+    url: n/a
+```
+
+Equivalent JSON should be accepted with the same keys. Internally, both JSON and YAML should normalize booleans, enum values, paths, and counts into the same `GroupDefinition`, `HostDefinition`, and `EffectiveConfig` objects used by legacy config.
+
+Format policy:
+
+- legacy config is the compatibility/default migration path;
+- JSON is first-class and requires no extra runtime dependency;
+- YAML is first-class when the optional YAML extra is installed, e.g. `manuheart[yaml]`;
+- structured config should support a single-file deployment, while legacy mode keeps separate group/host files;
+- do not make all formats support every historical quirk if doing so makes structured config worse.
 
 #### `checkers.py`
 
@@ -256,13 +308,25 @@ def run_once(cli_options) -> RunResult:
 
 The first milestone should preserve the Bash contract:
 
-- config formats;
+- legacy config formats;
 - CLI flags where practical;
 - JSON report locations;
 - JSON top-level structure;
 - one-shot default;
 - daemon option;
 - rollup semantics.
+
+### Add structured config deliberately
+
+JSON and YAML configuration should be supported as alternative inputs to the same normalized domain model, not as separate product behavior. The health engine must not care whether definitions came from legacy pipes, JSON, or YAML.
+
+Recommended precedence remains:
+
+1. CLI overrides
+2. selected config file
+3. defaults
+
+For structured config, group and host definitions should normally live in the same file. If later needed, add includes/imports carefully; do not start with recursive config includes unless we have an actual use case. Recursive includes are where sanity goes to die.
 
 ### Improve behind the contract
 
@@ -284,7 +348,7 @@ Do not build these in v1:
 - alerting engine;
 - distributed scheduler;
 - plugin framework;
-- YAML/TOML migration;
+- TOML migration;
 - metrics exporter.
 
 Those may become good ideas later. Right now they are how small tools wake up owning a pager.
@@ -311,15 +375,20 @@ Gate:
 Deliverables:
 
 - dataclasses/enums;
-- main config parser;
-- groups parser;
-- hosts parser;
-- warning model;
+- normalized loaded-configuration model;
+- legacy main config parser;
+- legacy groups parser;
+- legacy hosts parser;
+- JSON config parser;
+- YAML config parser behind an optional dependency;
+- warning/error model;
 - duplicate/invalid record handling.
 
 Gate:
 
-- parser tests cover comments, URL fragments, duplicate groups, duplicate hosts, invalid group references, bad critical/type/min/grace fields.
+- legacy parser tests cover comments, URL fragments, duplicate groups, duplicate hosts, invalid group references, bad critical/type/min/grace fields;
+- JSON/YAML parser tests cover equivalent valid structured config, type validation, missing required keys, duplicate groups/hosts, invalid enum values, and CLI override precedence;
+- all parser formats produce equivalent normalized domain objects for equivalent input.
 
 ### Phase 3: Health engine with fake checkers
 
