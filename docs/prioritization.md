@@ -29,3 +29,9 @@ Treat the current project as a working internal-tool foundation, not deployment-
 Russ decided to continue with **synthetic compatibility fixtures only** for now. Real-world Manuheart Bash configs should not be used unless separately approved and sanitized.
 
 Implication: compatibility work should expand the synthetic fixture suite to cover realistic behaviours without exposing internal topology or operational details.
+
+## Compatibility depth decision
+
+Russ decided to prioritize **exact Bash-output matching first** over broadening the synthetic fixture set.
+
+Implication: the next compatibility work should tighten the localhost Bash-vs-Python comparison from shape/name checks toward exact report-field compatibility, then document any intentional or unavoidable differences before adding broader synthetic scenarios.
