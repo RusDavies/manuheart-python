@@ -56,9 +56,9 @@
 - [x] Decide whether safe real-world Bash configs can be used as compatibility fixtures.
 - [ ] Add broader synthetic compatibility fixtures after exact localhost output matching is resolved.
 - [ ] Add expanded synthetic compatibility fixtures for multi-host, HTTP/S, optional group, duplicate, and failure-grace scenarios.
-- [ ] Tighten localhost Bash-vs-Python compatibility check to identify and document migration-relevant output differences.
+- [x] Tighten localhost Bash-vs-Python compatibility check to identify and document migration-relevant output differences.
 - [ ] Keep real-world fixture intake blocked unless Russ separately approves sanitized configs.
-- [ ] Document accepted compatibility differences between Bash and Python outputs.
+- [x] Document accepted compatibility differences between Bash and Python outputs.
 - [ ] Decide whether to add an explicit legacy-compatible report mode after clean typed output is established.
 - [ ] Add clean-venv install/package smoke test.
 - [ ] Decide remote repository and publishing/release posture.
