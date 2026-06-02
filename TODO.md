@@ -19,7 +19,7 @@
 - [x] Add README quick start for library API usage and CLI usage.
 - [x] Add Bash-vs-Python output compatibility check for localhost fixtures.
 - [x] Identify initial implementation or audit tasks.
-- [ ] Prioritize remediation/build items with Russ.
+- [x] Prioritize remediation/build items with Russ.
 
 
 ## Python rewrite backlog
@@ -43,3 +43,13 @@
 - [x] Add tests proving CLI behavior matches API behavior for equivalent inputs.
 - [x] Add smoke test for one-shot localhost run.
 - [x] Add daemon mode only after one-shot mode is solid.
+
+
+## Compatibility-first readiness backlog
+
+- [ ] Decide whether safe real-world Bash configs can be used as compatibility fixtures.
+- [ ] Add approved real-world compatibility fixtures, sanitized if needed.
+- [ ] Extend Bash-vs-Python compatibility check to approved fixture set.
+- [ ] Document accepted compatibility differences between Bash and Python outputs.
+- [ ] Add clean-venv install/package smoke test.
+- [ ] Decide remote repository and publishing/release posture.
