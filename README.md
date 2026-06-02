@@ -59,3 +59,18 @@ Run the local verification gate:
 .venv/bin/python scripts/check_dependency_security.py
 .venv/bin/python scripts/check_clean_install.py
 ```
+
+## Docs
+
+- [Scope](docs/scope.md)
+- [Requirements](docs/requirements.md)
+- [Architecture and deployment notes](docs/architecture-deployment-notes.md)
+- [Deployment test config](docs/deployment-test-config.md)
+- [Release posture](docs/release-posture.md)
+- [Security and privacy notes](docs/security-privacy-notes.md)
+- [QA evidence](docs/qa-evidence.md)
+- [Implementation checklist](docs/implementation-checklist.md)
+- [Bash implementation understanding](docs/bash-implementation-understanding.md)
+- [Python architecture proposal](docs/python-architecture-proposal.md)
+- [Localhost compatibility differences](docs/localhost-compatibility-differences.md)
+- [Fixture intake policy](docs/fixture-intake-policy.md)
