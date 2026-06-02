@@ -25,7 +25,7 @@ from manuheart.models import (
     ValidationResult,
 )
 from manuheart.reporting import write_reports as _write_reports
-from manuheart.state import load_previous_groups, load_previous_hosts, load_previous_systems
+from manuheart.state import load_previous_state
 
 __all__ = [
     "CheckResult",
@@ -85,13 +85,15 @@ def run_check(
 ) -> CheckRunResult:
     """Run one health-check cycle using a loaded configuration."""
 
+    previous = load_previous_state(config.effective)
     return run_health_cycle(
         config,
         checkers=checkers,
         clock=clock,
-        previous_hosts=load_previous_hosts(config.effective),
-        previous_groups=load_previous_groups(config.effective),
-        previous_systems=load_previous_systems(config.effective),
+        previous_hosts=previous.hosts,
+        previous_groups=previous.groups,
+        previous_systems=previous.systems,
+        previous_warnings=previous.warnings,
     )
 
 

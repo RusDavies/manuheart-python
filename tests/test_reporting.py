@@ -2,7 +2,12 @@ import json
 
 from manuheart.api import CheckResult, CheckType, load_config, run_check, write_reports
 from manuheart.models import ReportDestinations, Status
-from manuheart.state import load_previous_groups, load_previous_hosts, load_previous_systems
+from manuheart.state import (
+    load_previous_groups,
+    load_previous_hosts,
+    load_previous_state,
+    load_previous_systems,
+)
 
 
 class FakeChecker:
@@ -222,6 +227,7 @@ def test_previous_state_malformed_values_degrade_to_defaults(tmp_path):
     hosts = load_previous_hosts(loaded.effective)
     groups = load_previous_groups(loaded.effective)
     systems = load_previous_systems(loaded.effective)
+    previous = load_previous_state(loaded.effective)
 
     assert hosts["g/bad-host"].url == "unknown"
     assert hosts["g/bad-host"].fail_count == 0
@@ -235,6 +241,24 @@ def test_previous_state_malformed_values_degrade_to_defaults(tmp_path):
     assert groups["bad-group"].status == Status.UNKNOWN
     assert systems["bad-system"].failure_count == 0
     assert systems["bad-system"].status == Status.UNKNOWN
+    assert "hoststatus: previous state hosts[0] is not an object; ignoring" in previous.warnings
+    assert (
+        "hoststatus g/bad-host.fail_count: invalid integer 'not-an-int'; using 0"
+        in previous.warnings
+    )
+    assert (
+        "hoststatus g/bad-host.status: invalid status 'sideways'; using unknown"
+        in previous.warnings
+    )
+    assert (
+        "groupstatus bad-group.critical: invalid boolean 'definitely'; using False"
+        in previous.warnings
+    )
+    assert "groupstatus bad-group.type: invalid check type 'smtp'; using icmp" in previous.warnings
+    assert (
+        "sysstatus bad-system.failure_count: invalid integer 'not-an-int'; using 0"
+        in previous.warnings
+    )
 
 
 def test_previous_state_ignores_non_object_payloads(tmp_path):
@@ -253,3 +277,36 @@ def test_previous_state_ignores_non_object_payloads(tmp_path):
     assert load_previous_hosts(loaded.effective) == {}
     assert load_previous_groups(loaded.effective) == {}
     assert load_previous_systems(loaded.effective) == {}
+
+    previous = load_previous_state(loaded.effective)
+    assert previous.hosts == {}
+    assert previous.groups == {}
+    assert previous.systems == {}
+    assert previous.warnings == (
+        f"hoststatus: previous state file {loaded.effective.reports.hosts} "
+        "is not an object; ignoring",
+        "groupstatus: previous state field 'groups' is not a list; ignoring",
+        "sysstatus: previous state systems[0] is not an object; ignoring",
+    )
+
+
+def test_run_check_surfaces_previous_state_warnings(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={
+            "host_status_file": tmp_path / "hoststatus",
+            "group_status_file": tmp_path / "groupstatus",
+            "system_status_file": tmp_path / "sysstatus",
+        },
+    )
+    loaded.effective.reports.hosts.write_text("not-json")
+    loaded.effective.reports.groups.write_text(json.dumps({"groups": []}))
+    loaded.effective.reports.systems.write_text(json.dumps({"systems": []}))
+
+    result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker()}, clock=lambda: "now")
+
+    assert result.hosts["localhost-icmp/127.0.0.1"].status == Status.UP
+    assert result.warnings == (
+        f"hoststatus: previous state file {loaded.effective.reports.hosts} "
+        "is invalid JSON; ignoring",
+    )
