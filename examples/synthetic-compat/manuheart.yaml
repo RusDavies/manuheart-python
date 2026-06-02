@@ -5,9 +5,9 @@ runtime:
   check_period: 3
   run_mode: once
   status_files:
-    hosts: ./var/manuheart/status/hoststatus
-    groups: ./var/manuheart/status/groupstatus
-    systems: ./var/manuheart/status/sysstatus
+    hosts: status/hoststatus
+    groups: status/groupstatus
+    systems: status/sysstatus
 groups:
   - name: frontend-http
     system: synthetic-web

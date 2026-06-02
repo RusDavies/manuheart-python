@@ -117,6 +117,15 @@ def _resolve_path(value: str | Path | None, base: Path | None = None) -> Path | 
     return path
 
 
+def _resolve_status_path(value: str | Path | None, var_dir: Path, default_name: str) -> Path:
+    if value is None:
+        return var_dir / "status" / default_name
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return var_dir / path
+
+
 def _infer_format(path: Path, requested: ConfigFormat) -> ConfigFormat:
     if requested != ConfigFormat.AUTO:
         return requested
@@ -276,18 +285,9 @@ def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> Effective
         check_period=_int_greater_than(runtime.get("check_period", 3), "runtime.check_period", 0),
         run_mode=_run_mode(runtime.get("run_mode", "once"), "runtime.run_mode"),
         reports=ReportDestinations(
-            hosts=_resolve_path(
-                status_files.get("hosts", var_dir / "status/hoststatus"), config_dir
-            )
-            or var_dir / "status/hoststatus",
-            groups=_resolve_path(
-                status_files.get("groups", var_dir / "status/groupstatus"), config_dir
-            )
-            or var_dir / "status/groupstatus",
-            systems=_resolve_path(
-                status_files.get("systems", var_dir / "status/sysstatus"), config_dir
-            )
-            or var_dir / "status/sysstatus",
+            hosts=_resolve_status_path(status_files.get("hosts"), var_dir, "hoststatus"),
+            groups=_resolve_status_path(status_files.get("groups"), var_dir, "groupstatus"),
+            systems=_resolve_status_path(status_files.get("systems"), var_dir, "sysstatus"),
         ),
         http=HttpCheckSettings(
             connect_timeout=_float_greater_than(

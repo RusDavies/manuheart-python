@@ -287,3 +287,18 @@ Pre-merge gate on branch `state-load-warnings`:
 - `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
 
 Added warning-aware previous-state loading. Malformed JSON, non-object report payloads, non-list report collections, non-object records, malformed integers, invalid booleans, invalid statuses, invalid check types, and missing identity fields now degrade safely and produce warnings. `run_check()` carries those warnings into `CheckRunResult.warnings`, and the CLI prints them to stderr for `check` runs.
+
+## Evidence for status-file path semantics
+
+Pre-merge gate on branch `status-files-relative-to-var-dir`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 69 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed and wrote reports under `examples/deployment-test/var/manuheart/tmp/public-smoke-reports/`.
+
+Changed status-file path semantics so omitted status files default to `var_dir/status/{hoststatus,groupstatus,sysstatus}`, relative `runtime.status_files.*` paths resolve under `runtime.var_dir`, and absolute status-file paths remain absolute. Updated examples and docs accordingly.
