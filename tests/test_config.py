@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from manuheart.api import ConfigFormat, load_config
+from manuheart.errors import ConfigError
 
 FIXTURES = Path("examples/localhost")
 SYNTHETIC_FIXTURES = Path("examples/synthetic-compat")
@@ -78,3 +79,56 @@ def test_legacy_edge_case_fixture_emits_parser_warnings():
     assert any("unknown group" in warning for warning in loaded.warnings)
     assert any("invalid URL" in warning for warning in loaded.warnings)
     assert any("expected 3 host fields" in warning for warning in loaded.warnings)
+
+
+def test_structured_config_requires_top_level_object(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text("[]")
+    with pytest.raises(ConfigError, match="top-level config must be an object"):
+        load_config(config)
+
+
+def test_structured_config_reports_missing_group_field(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text('{"groups": [{"name": "g"}], "hosts": []}')
+    with pytest.raises(ConfigError, match=r"groups\[0\]\.system is required"):
+        load_config(config)
+
+
+def test_structured_config_requires_groups_and_hosts_lists(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text('{"groups": {}, "hosts": []}')
+    with pytest.raises(ConfigError, match="groups must be a list"):
+        load_config(config)
+
+
+def test_structured_config_validates_http_host_url(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text(
+        """
+        {
+          "groups": [
+            {
+              "name": "web",
+              "system": "s",
+              "critical": true,
+              "type": "http",
+              "min_count": 1,
+              "failure_grace": 1
+            }
+          ],
+          "hosts": [
+            {"name": "web-a", "group": "web", "url": "n/a"}
+          ]
+        }
+        """
+    )
+    with pytest.raises(ConfigError, match=r"hosts\[0\] URL must start with http"):
+        load_config(config)
+
+
+def test_structured_runtime_sections_must_be_objects(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text('{"runtime": [], "groups": [], "hosts": []}')
+    with pytest.raises(ConfigError, match="runtime must be an object"):
+        load_config(config)

@@ -70,6 +70,32 @@ def _int(value: Any, name: str) -> int:
         raise ConfigError(f"invalid integer for {name}: {value!r}") from exc
 
 
+def _float(value: Any, name: str) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ConfigError(f"invalid number for {name}: {value!r}") from exc
+
+
+def _mapping(value: Any, name: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ConfigError(f"{name} must be an object")
+    return value
+
+
+def _list(value: Any, name: str) -> list[Any]:
+    if not isinstance(value, list):
+        raise ConfigError(f"{name} must be a list")
+    return value
+
+
+def _required(item: Mapping[str, Any], field: str, path: str) -> Any:
+    value = item.get(field)
+    if value is None or value == "":
+        raise ConfigError(f"{path}.{field} is required")
+    return value
+
+
 def _expand(value: str, macros: Mapping[str, Path]) -> str:
     result = str(value).strip().strip('"').strip("'")
     for key, replacement in macros.items():
@@ -206,27 +232,50 @@ def _structured_definitions(
     data: Mapping[str, Any],
 ) -> tuple[dict[str, GroupDefinition], dict[str, HostDefinition]]:
     groups: dict[str, GroupDefinition] = {}
-    for item in data.get("groups", []):
+    for idx, raw_item in enumerate(_list(data.get("groups", []), "groups")):
+        path = f"groups[{idx}]"
+        item = _mapping(raw_item, path)
+        name = str(_required(item, "name", path))
+        system = str(_required(item, "system", path))
+        critical = _bool(_required(item, "critical", path))
+        check_type_value = str(_required(item, "type", path)).lower()
+        try:
+            check_type = CheckType(check_type_value)
+        except ValueError as exc:
+            raise ConfigError(
+                f"{path}.type has unsupported check type: {check_type_value!r}"
+            ) from exc
         definition = GroupDefinition(
-            name=str(item["name"]),
-            system=str(item["system"]),
-            critical=_bool(item["critical"]),
-            check_type=CheckType(str(item["type"]).lower()),
-            min_count=_int(item["min_count"], "min_count"),
-            failure_grace=_int(item["failure_grace"], "failure_grace"),
+            name=name,
+            system=system,
+            critical=critical,
+            check_type=check_type,
+            min_count=_int(_required(item, "min_count", path), f"{path}.min_count"),
+            failure_grace=_int(
+                _required(item, "failure_grace", path), f"{path}.failure_grace"
+            ),
         )
         if definition.name in groups:
             raise ConfigError(f"duplicate group {definition.name!r}")
         groups[definition.name] = definition
     hosts: dict[str, HostDefinition] = {}
-    for item in data.get("hosts", []):
+    for idx, raw_item in enumerate(_list(data.get("hosts", []), "hosts")):
+        path = f"hosts[{idx}]"
+        item = _mapping(raw_item, path)
         definition = HostDefinition(
-            name=str(item["name"]), group=str(item["group"]), url=str(item["url"])
+            name=str(_required(item, "name", path)),
+            group=str(_required(item, "group", path)),
+            url=str(_required(item, "url", path)),
         )
         if definition.group not in groups:
             raise ConfigError(f"host {definition.key!r} references unknown group")
         if definition.key in hosts:
             raise ConfigError(f"duplicate host {definition.key!r}")
+        if groups[definition.group].check_type in {
+            CheckType.HTTP,
+            CheckType.HTTPS,
+        } and not definition.url.startswith(("http://", "https://")):
+            raise ConfigError(f"{path} URL must start with http:// or https://")
         hosts[definition.key] = definition
     return groups, hosts
 
@@ -234,14 +283,14 @@ def _structured_definitions(
 def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> EffectiveConfig:
     path = path.resolve()
     config_dir = path.parent
-    runtime = data.get("runtime", {}) or {}
-    checks = data.get("checks", {}) or {}
-    http = (checks.get("http", {}) or {}) if isinstance(checks, Mapping) else {}
-    icmp = (checks.get("icmp", {}) or {}) if isinstance(checks, Mapping) else {}
+    runtime = _mapping(data.get("runtime", {}), "runtime")
+    checks = _mapping(data.get("checks", {}), "checks")
+    http = _mapping(checks.get("http", {}), "checks.http")
+    icmp = _mapping(checks.get("icmp", {}), "checks.icmp")
     var_dir = _resolve_path(runtime.get("var_dir", "var/manuheart"), config_dir) or Path(
         "var/manuheart"
     )
-    status_files = runtime.get("status_files", {}) or {}
+    status_files = _mapping(runtime.get("status_files", {}), "runtime.status_files")
     return EffectiveConfig(
         config_file=path,
         config_dir=config_dir,
@@ -265,11 +314,11 @@ def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> Effective
             or var_dir / "status/sysstatus",
         ),
         http=HttpCheckSettings(
-            connect_timeout=float(http.get("connect_timeout", 3)),
-            max_time=float(http.get("max_time", 5)),
+            connect_timeout=_float(http.get("connect_timeout", 3), "checks.http.connect_timeout"),
+            max_time=_float(http.get("max_time", 5), "checks.http.max_time"),
         ),
         icmp=IcmpCheckSettings(
-            timeout=float(icmp.get("timeout", 1)),
+            timeout=_float(icmp.get("timeout", 1), "checks.icmp.timeout"),
             count=_int(icmp.get("count", 1), "icmp.count"),
             privileged=_bool(icmp.get("privileged", False)),
         ),
@@ -344,7 +393,11 @@ def _load_legacy(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
 
 
 def _load_json(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
-    data = json.loads(path.read_text())
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"invalid JSON config: {exc.msg}") from exc
+    data = _mapping(data, "top-level config")
     groups, hosts = _structured_definitions(data)
     effective = apply_overrides(_effective_from_structured(path, data), overrides)
     return LoadedConfiguration(effective=effective, groups=groups, hosts=hosts)
@@ -358,6 +411,7 @@ def _load_yaml(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
             "YAML config requires the optional PyYAML dependency"
         ) from exc
     data = yaml.safe_load(path.read_text()) or {}
+    data = _mapping(data, "top-level config")
     groups, hosts = _structured_definitions(data)
     effective = apply_overrides(_effective_from_structured(path, data), overrides)
     return LoadedConfiguration(effective=effective, groups=groups, hosts=hosts)

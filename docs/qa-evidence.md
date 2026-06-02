@@ -93,3 +93,14 @@ Pre-merge gate on branch `harden-previous-state-loading`:
 - `scripts/check_clean_install.py`: passed.
 
 Added safe previous-state parsing for non-object payloads, non-list report collections, non-record entries, malformed integer fields, unknown statuses, unknown check types, and ambiguous boolean values. Malformed previous report data now degrades to safe defaults instead of crashing the next check cycle.
+
+## Evidence for structured config validation hardening
+
+Pre-merge gate on branch `structured-config-validation`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 35 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed.
+
+Structured JSON/YAML config loading now validates top-level object shape, `groups`/`hosts` list shape, group/host item object shape, required fields with path-specific messages, unsupported group check types, HTTP/HTTPS host URL schemes, runtime/checks/status_files section shapes, numeric check settings, and malformed JSON. Errors are raised as `ConfigError` instead of raw parser/type/key exceptions.
