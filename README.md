@@ -46,8 +46,9 @@ Run the local verification gate:
 
 ```bash
 .venv/bin/python -m pytest -q
-.venv/bin/python -m ruff check src tests
+.venv/bin/python -m ruff check src tests scripts
 .venv/bin/python scripts/check_localhost_compatibility.py
+.venv/bin/python scripts/check_clean_install.py
 ```
 
 ## Product process
