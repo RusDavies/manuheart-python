@@ -62,3 +62,14 @@
 - [x] Decide whether to add an explicit legacy-compatible report mode after clean typed output is established.
 - [x] Add clean-venv install/package smoke test.
 - [ ] Decide remote repository and publishing/release posture.
+
+## Code analysis improvement backlog
+
+- [ ] Harden previous-state loading against malformed report values.
+- [ ] Add stricter structured JSON/YAML config validation and clearer `ConfigError` messages.
+- [ ] Make HTTP checking less HEAD-only, via configurable method or safe GET fallback.
+- [ ] Improve CLI error handling for `check` and `daemon` operational failures.
+- [ ] Improve daemon observability and graceful shutdown behaviour.
+- [ ] Reuse or inject HTTP clients for efficiency and cleaner checker tests.
+- [ ] Add static typing gate and package typing marker (`py.typed`).
+- [ ] Add dependency/security review gate before release.
