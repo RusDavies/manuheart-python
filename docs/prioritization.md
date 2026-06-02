@@ -28,7 +28,7 @@ Treat the current project as a working internal-tool foundation, not deployment-
 
 Russ decided to continue with **synthetic compatibility fixtures only** for now. Real-world Manuheart Bash configs should not be used unless separately approved and sanitized.
 
-Implication: compatibility work should expand the synthetic fixture suite to cover realistic behaviours without exposing internal topology or operational details.
+Implication: compatibility work should expand the synthetic fixture suite to cover realistic behaviours without exposing internal topology or operational details. The standing intake guardrail is documented in `docs/fixture-intake-policy.md`.
 
 ## Compatibility depth decision
 

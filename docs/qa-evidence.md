@@ -52,3 +52,13 @@ Pre-merge gate on branch `add-synthetic-compat-fixtures`:
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
 
 Added `examples/synthetic-compat/` with equivalent legacy, JSON, and YAML fixtures covering multi-host HTTP, HTTPS, ICMP, multiple systems, optional empty group, and failure-grace behaviour. Added `tests/fixtures/legacy-edge-cases/` to exercise legacy duplicate rows, invalid rows, unknown groups, and invalid HTTP URL warnings without using real-world configs.
+
+## Evidence for real-world fixture intake guardrail
+
+Pre-merge gate on branch `block-real-world-fixture-intake`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 28 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+
+Added `docs/fixture-intake-policy.md` and linked it from privacy/security and prioritization notes. The policy blocks real-world Manuheart config/report fixture intake unless Russ explicitly approves a specific sanitized source set.

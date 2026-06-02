@@ -20,6 +20,7 @@ Manuheart configuration and reports may contain internal hostnames, IP addresses
 
 - No personal data is required for normal operation.
 - Do not publish health reports or configs outside trusted internal contexts.
+- Keep real-world config/report fixture intake blocked unless Russ explicitly approves a specific sanitized source set; see `docs/fixture-intake-policy.md`.
 
 ## Current dependency posture
 
