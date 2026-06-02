@@ -1,0 +1,5 @@
+# Valid group plus duplicate and invalid rows for parser compatibility warnings.
+edge-http | edge-system | yes | http | 1 | 1
+edge-http | edge-system | yes | http | 1 | 1
+bad-group | edge-system | maybe | http | 1 | 1
+short | row

@@ -1,0 +1,5 @@
+# group             | system            | critical | type  | min instance count | failure count grace
+frontend-http       | synthetic-web     | yes      | http  | 2                  | 1
+api-https           | synthetic-web     | yes      | https | 1                  | 2
+optional-workers    | synthetic-web     | no       | icmp  | 0                  | -1
+batch-icmp          | synthetic-batch   | yes      | icmp  | 1                  | 1

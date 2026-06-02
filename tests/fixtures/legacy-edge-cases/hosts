@@ -1,0 +1,5 @@
+edge-a | edge-http | http://edge-a.example.test/health
+edge-a | edge-http | http://edge-a.example.test/health
+missing-group-host | missing-group | http://missing.example.test/health
+bad-url | edge-http | n/a
+short | row
