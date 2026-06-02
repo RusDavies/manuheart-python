@@ -95,3 +95,5 @@
 
 - [x] Add internal `v0.1.0` changelog/release notes.
 - [x] Confirm release-readiness gate includes lint, typecheck, tests, compatibility, dependency audit, public smoke validate/check, and clean install smoke.
+- [x] Add GitHub Actions trusted-publishing workflow for TestPyPI/PyPI.
+- [x] Document PyPI/TestPyPI pending trusted-publisher setup fields.

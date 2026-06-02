@@ -70,6 +70,7 @@ Run the local verification gate:
 - [Health state semantics](docs/health-state-semantics.md)
 - [Deployment test config](docs/deployment-test-config.md)
 - [Release posture](docs/release-posture.md)
+- [PyPI trusted publishing setup](docs/release/pypi-trusted-publishing.md)
 - [Security and privacy notes](docs/security-privacy-notes.md)
 - [Changelog](CHANGELOG.md)
 - [QA evidence](docs/qa-evidence.md)
