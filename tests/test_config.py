@@ -132,3 +132,11 @@ def test_structured_runtime_sections_must_be_objects(tmp_path):
     config.write_text('{"runtime": [], "groups": [], "hosts": []}')
     with pytest.raises(ConfigError, match="runtime must be an object"):
         load_config(config)
+
+
+def test_structured_yaml_parse_errors_are_config_errors(tmp_path):
+    pytest.importorskip("yaml")
+    config = tmp_path / "bad.yaml"
+    config.write_text("groups: [")
+    with pytest.raises(ConfigError, match="invalid YAML config"):
+        load_config(config)

@@ -99,8 +99,8 @@ Added safe previous-state parsing for non-object payloads, non-list report colle
 Pre-merge gate on branch `structured-config-validation`:
 
 - `ruff check src tests scripts`: passed.
-- `pytest`: 35 passed.
+- `pytest`: 36 passed.
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
 - `scripts/check_clean_install.py`: passed.
 
-Structured JSON/YAML config loading now validates top-level object shape, `groups`/`hosts` list shape, group/host item object shape, required fields with path-specific messages, unsupported group check types, HTTP/HTTPS host URL schemes, runtime/checks/status_files section shapes, numeric check settings, and malformed JSON. Errors are raised as `ConfigError` instead of raw parser/type/key exceptions.
+Structured JSON/YAML config loading now validates top-level object shape, `groups`/`hosts` list shape, group/host item object shape, required fields with path-specific messages, unsupported group check types, HTTP/HTTPS host URL schemes, runtime/checks/status_files section shapes, numeric check settings, malformed JSON, and malformed YAML. Errors are raised as `ConfigError` instead of raw parser/type/key exceptions.

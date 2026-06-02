@@ -410,7 +410,10 @@ def _load_yaml(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
         raise UnsupportedConfigFormatError(
             "YAML config requires the optional PyYAML dependency"
         ) from exc
-    data = yaml.safe_load(path.read_text()) or {}
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except yaml.YAMLError as exc:
+        raise ConfigError(f"invalid YAML config: {exc}") from exc
     data = _mapping(data, "top-level config")
     groups, hosts = _structured_definitions(data)
     effective = apply_overrides(_effective_from_structured(path, data), overrides)
