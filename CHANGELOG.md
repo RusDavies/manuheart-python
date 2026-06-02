@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.1 - PyPI trusted publishing release
+
+Status: public package publishing release.
+
+### Changed
+
+- Added GitHub Actions trusted publishing workflow for TestPyPI and PyPI.
+- Added PyPI/TestPyPI trusted-publisher setup documentation.
+- Changed README documentation links to absolute GitHub URLs so they render correctly on PyPI.
+- Added package project URLs for repository and changelog.
+- Added local release tooling extras for `build` and `twine`.
+
+### Verification
+
+- TestPyPI trusted publishing for `manuheart==0.1.0` was verified before this release.
+- `manuheart[yaml]==0.1.0` installed successfully from TestPyPI with real PyPI as dependency fallback.
+
 ## v0.1.0 - Internal baseline
 
 Status: internal/private baseline; not a public release.
