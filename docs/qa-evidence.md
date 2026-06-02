@@ -16,6 +16,7 @@ rm -rf /tmp/manuheart-smoke
   --group-status-file /tmp/manuheart-smoke/groupstatus \
   --sys-status-file /tmp/manuheart-smoke/sysstatus
 .venv/bin/python scripts/check_localhost_compatibility.py
+.venv/bin/python scripts/check_clean_install.py
 ```
 
 ## Evidence from previous completed iteration
@@ -72,3 +73,12 @@ Pre-merge gate on branch `decide-legacy-report-mode`:
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
 
 Recorded the decision not to add an explicit legacy-compatible report mode now. Clean typed JSON remains the default, previous-state loading can read legacy fields, and exact Bash-shaped output should be added only if a concrete downstream consumer requires it.
+
+## Evidence for clean-venv install/package smoke
+
+Pre-merge gate on branch `add-clean-venv-smoke`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 28 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed; it created a temporary clean venv, installed `manuheart[yaml]` from the project root, imported the public API, validated JSON and YAML fixtures via the installed `manuheart` console script, ran a one-shot check, and verified report JSON records were written.
