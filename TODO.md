@@ -48,6 +48,7 @@
 ## Compatibility-first readiness backlog
 
 - [ ] Preserve report filenames and top-level keys while converting inner fields to cleaner typed JSON.
+- [ ] Use Pythonic snake_case field names in clean typed report records.
 - [ ] Implement clean typed report output as the default Python report format.
 - [ ] Keep report status fields as enum-like strings (`up`, `down`, `unknown`).
 - [ ] Keep report timestamp fields as consistently ISO-8601 strings.

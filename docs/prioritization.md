@@ -73,3 +73,19 @@ Implication: clean typed output should convert numeric and boolean fields to JSO
 Russ confirmed timestamp fields such as `lastUp` and `lastChecked` should remain strings, but should be consistently ISO-8601.
 
 Implication: clean typed output should keep timestamps human-readable and JSON-native while avoiding inconsistent legacy timestamp formats where possible.
+
+## Report field-name decision
+
+Russ decided clean typed report fields should use Pythonic `snake_case` names.
+
+Examples:
+
+- `last_up` instead of `lastUp`
+- `last_checked` instead of `lastChecked`
+- `fail_count` instead of `failCount`
+- `min_count` instead of `minCount`
+- `failure_grace` instead of `failGrace`
+- `instance_count` instead of `instanceCount`
+- `failure_count` instead of `failureCount`
+
+Implication: the clean default report format should preserve the outer report files/top-level keys, but use Pythonic field names and typed JSON values inside each record. Legacy field names can be considered only in an explicit compatibility mode if needed later.
