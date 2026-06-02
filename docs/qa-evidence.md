@@ -160,3 +160,16 @@ Pre-merge gate on branch `typing-gate-pytyped`:
 - `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
 
 Added `mypy` and `types-PyYAML` to the development extra, added `src/manuheart/py.typed` as a PEP 561 marker included in the wheel, added mypy configuration, fixed source typing issues surfaced by mypy, and documented mypy in the local verification gate.
+
+## Evidence for dependency/security review gate
+
+Pre-merge gate on branch `dependency-security-gate`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed with no issues across 11 source files.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_dependency_security.py`: passed; no known vulnerabilities found in releasable runtime dependencies plus optional YAML extra.
+- `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
+
+Added `pip-audit` to the development extra and added `scripts/check_dependency_security.py`, which audits the releasable dependency set from `pyproject.toml` while intentionally excluding dev-only tooling and the unpublished local package itself.

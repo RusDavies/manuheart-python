@@ -72,6 +72,7 @@ Run the local verification gate:
 .venv/bin/python -m mypy src/manuheart
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/check_localhost_compatibility.py
+.venv/bin/python scripts/check_dependency_security.py
 .venv/bin/python scripts/check_clean_install.py
 ```
 
