@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -11,10 +12,12 @@ from manuheart.errors import ConfigError, UnsupportedConfigFormatError
 from manuheart.models import (
     CheckType,
     ConfigFormat,
+    ConfigOverrides,
     EffectiveConfig,
     GroupDefinition,
     HostDefinition,
     HttpCheckSettings,
+    IcmpCheckSettings,
     LoadedConfiguration,
     ReportDestinations,
 )
@@ -93,6 +96,45 @@ def _infer_format(path: Path, requested: ConfigFormat) -> ConfigFormat:
     if suffix in {".yaml", ".yml"}:
         return ConfigFormat.YAML
     return ConfigFormat.LEGACY
+
+
+def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -> ConfigOverrides:
+    if overrides is None:
+        return ConfigOverrides()
+    if isinstance(overrides, ConfigOverrides):
+        return overrides
+    allowed = {field for field in ConfigOverrides.__dataclass_fields__}
+    unknown = set(overrides) - allowed
+    if unknown:
+        raise ConfigError(f"unknown config override(s): {', '.join(sorted(unknown))}")
+    return ConfigOverrides(
+        **{
+            key: Path(value) if key.endswith(("dir", "file")) and value is not None else value
+            for key, value in overrides.items()
+        }
+    )
+
+
+def apply_overrides(config: EffectiveConfig, overrides: ConfigOverrides) -> EffectiveConfig:
+    var_dir = overrides.var_dir or config.var_dir
+    reports = ReportDestinations(
+        hosts=overrides.host_status_file or config.reports.hosts,
+        groups=overrides.group_status_file or config.reports.groups,
+        systems=overrides.system_status_file or config.reports.systems,
+    )
+    return replace(
+        config,
+        var_dir=var_dir,
+        log_file=overrides.log_file or config.log_file,
+        log_level=overrides.log_level if overrides.log_level is not None else config.log_level,
+        check_period=(
+            overrides.check_period if overrides.check_period is not None else config.check_period
+        ),
+        run_mode=overrides.run_mode or config.run_mode,
+        group_file=overrides.group_file or config.group_file,
+        host_file=overrides.host_file or config.host_file,
+        reports=reports,
+    )
 
 
 def _parse_groups(path: Path) -> tuple[dict[str, GroupDefinition], list[str]]:
@@ -190,11 +232,12 @@ def _structured_definitions(
 
 
 def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> EffectiveConfig:
+    path = path.resolve()
+    config_dir = path.parent
     runtime = data.get("runtime", {}) or {}
     checks = data.get("checks", {}) or {}
     http = (checks.get("http", {}) or {}) if isinstance(checks, Mapping) else {}
-    path = path.resolve()
-    config_dir = path.parent
+    icmp = (checks.get("icmp", {}) or {}) if isinstance(checks, Mapping) else {}
     var_dir = _resolve_path(runtime.get("var_dir", "var/manuheart"), config_dir) or Path(
         "var/manuheart"
     )
@@ -225,10 +268,15 @@ def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> Effective
             connect_timeout=float(http.get("connect_timeout", 3)),
             max_time=float(http.get("max_time", 5)),
         ),
+        icmp=IcmpCheckSettings(
+            timeout=float(icmp.get("timeout", 1)),
+            count=_int(icmp.get("count", 1), "icmp.count"),
+            privileged=_bool(icmp.get("privileged", False)),
+        ),
     )
 
 
-def _load_legacy(path: Path) -> LoadedConfiguration:
+def _load_legacy(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
     path = path.resolve()
     config_dir = path.parent
     macros: dict[str, Path] = {"CONFIGDIR": config_dir, "CONFIGFILE": path}
@@ -251,9 +299,12 @@ def _load_legacy(path: Path) -> LoadedConfiguration:
     var_dir = _resolve_path(values.get("VARDIR", "var/manuheart"), config_dir) or Path(
         "var/manuheart"
     )
-    macros["VARDIR"] = var_dir
-    group_file = _resolve_path(values.get("GROUPFILE", config_dir / "groups"), config_dir)
-    host_file = _resolve_path(values.get("HOSTFILE", config_dir / "hosts"), config_dir)
+    group_file = overrides.group_file or _resolve_path(
+        values.get("GROUPFILE", config_dir / "groups"), config_dir
+    )
+    host_file = overrides.host_file or _resolve_path(
+        values.get("HOSTFILE", config_dir / "hosts"), config_dir
+    )
     effective = EffectiveConfig(
         config_file=path,
         config_dir=config_dir,
@@ -279,10 +330,11 @@ def _load_legacy(path: Path) -> LoadedConfiguration:
             or var_dir / "status/sysstatus",
         ),
     )
-    if group_file is None or host_file is None:
+    effective = apply_overrides(effective, overrides)
+    if effective.group_file is None or effective.host_file is None:
         raise ConfigError("legacy configuration requires group and host files")
-    groups, group_warnings = _parse_groups(group_file)
-    hosts, host_warnings = _parse_hosts(host_file, groups)
+    groups, group_warnings = _parse_groups(effective.group_file)
+    hosts, host_warnings = _parse_hosts(effective.host_file, groups)
     return LoadedConfiguration(
         effective=effective,
         groups=groups,
@@ -291,15 +343,14 @@ def _load_legacy(path: Path) -> LoadedConfiguration:
     )
 
 
-def _load_json(path: Path) -> LoadedConfiguration:
+def _load_json(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
     data = json.loads(path.read_text())
     groups, hosts = _structured_definitions(data)
-    return LoadedConfiguration(
-        effective=_effective_from_structured(path, data), groups=groups, hosts=hosts
-    )
+    effective = apply_overrides(_effective_from_structured(path, data), overrides)
+    return LoadedConfiguration(effective=effective, groups=groups, hosts=hosts)
 
 
-def _load_yaml(path: Path) -> LoadedConfiguration:
+def _load_yaml(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
     try:
         import yaml  # type: ignore[import-not-found]
     except ModuleNotFoundError as exc:
@@ -308,26 +359,22 @@ def _load_yaml(path: Path) -> LoadedConfiguration:
         ) from exc
     data = yaml.safe_load(path.read_text()) or {}
     groups, hosts = _structured_definitions(data)
-    return LoadedConfiguration(
-        effective=_effective_from_structured(path, data), groups=groups, hosts=hosts
-    )
+    effective = apply_overrides(_effective_from_structured(path, data), overrides)
+    return LoadedConfiguration(effective=effective, groups=groups, hosts=hosts)
 
 
 def load_config(
     path: Path,
     *,
     config_format: ConfigFormat = ConfigFormat.AUTO,
-    overrides: Mapping[str, Any] | None = None,
+    overrides: Mapping[str, Any] | ConfigOverrides | None = None,
 ) -> LoadedConfiguration:
+    normalized_overrides = normalize_overrides(overrides)
     selected = _infer_format(path, config_format)
     if selected == ConfigFormat.LEGACY:
-        loaded = _load_legacy(path)
-    elif selected == ConfigFormat.JSON:
-        loaded = _load_json(path)
-    elif selected == ConfigFormat.YAML:
-        loaded = _load_yaml(path)
-    else:
-        raise UnsupportedConfigFormatError(f"unsupported config format: {selected}")
-    # Placeholder for future override normalization; keep public API stable now.
-    _ = overrides
-    return loaded
+        return _load_legacy(path, normalized_overrides)
+    if selected == ConfigFormat.JSON:
+        return _load_json(path, normalized_overrides)
+    if selected == ConfigFormat.YAML:
+        return _load_yaml(path, normalized_overrides)
+    raise UnsupportedConfigFormatError(f"unsupported config format: {selected}")
