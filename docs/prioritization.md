@@ -89,3 +89,16 @@ Examples:
 - `failure_count` instead of `failureCount`
 
 Implication: the clean default report format should preserve the outer report files/top-level keys, but use Pythonic field names and typed JSON values inside each record. Legacy field names can be considered only in an explicit compatibility mode if needed later.
+
+## Legacy report mode decision
+
+Decision: do **not** add an explicit legacy-compatible report mode now.
+
+Rationale:
+
+- Russ chose clean typed reports as the default from the start.
+- The current compatibility contract preserves the migration-relevant outer surfaces: filenames, top-level keys, record identities, stable descriptive fields, and status strings.
+- Previous-state loading already accepts both clean snake_case fields and legacy Bash field names, so existing report state can be consumed during migration.
+- Adding a legacy-output mode now would increase API/CLI surface area before there is evidence of a real downstream consumer that requires exact Bash-shaped inner fields.
+
+Revisit this only if a concrete consumer requires strict legacy inner-field output such as `lastUp`, `failCount`, stringified numbers, or `critical: "yes" / "no"`. If that happens, implement it as an explicit opt-in mode, not as the default.
