@@ -47,9 +47,10 @@
 
 ## Compatibility-first readiness backlog
 
-- [ ] Decide whether safe real-world Bash configs can be used as compatibility fixtures.
-- [ ] Add approved real-world compatibility fixtures, sanitized if needed.
+- [x] Decide whether safe real-world Bash configs can be used as compatibility fixtures.
+- [ ] Add expanded synthetic compatibility fixtures for multi-host, HTTP/S, optional group, duplicate, and failure-grace scenarios.
 - [ ] Extend Bash-vs-Python compatibility check to approved fixture set.
+- [ ] Keep real-world fixture intake blocked unless Russ separately approves sanitized configs.
 - [ ] Document accepted compatibility differences between Bash and Python outputs.
 - [ ] Add clean-venv install/package smoke test.
 - [ ] Decide remote repository and publishing/release posture.

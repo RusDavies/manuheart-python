@@ -23,3 +23,9 @@ Clean Python-library/API quality remains important, but the current public API f
 ## Current recommendation
 
 Treat the current project as a working internal-tool foundation, not deployment-approved production replacement. The next decision is whether Russ has safe real-world Bash configs that can be used as compatibility fixtures, or whether compatibility should remain limited to synthetic examples for now.
+
+## Fixture-source decision
+
+Russ decided to continue with **synthetic compatibility fixtures only** for now. Real-world Manuheart Bash configs should not be used unless separately approved and sanitized.
+
+Implication: compatibility work should expand the synthetic fixture suite to cover realistic behaviours without exposing internal topology or operational details.
