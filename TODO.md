@@ -16,6 +16,8 @@
 
 - [ ] Define scope: what Manuheart Python is responsible for.
 - [ ] Capture baseline inventory, current access assumptions, and dependencies.
+- [ ] Add README quick start for library API usage and CLI usage.
+- [ ] Add Bash-vs-Python output compatibility check for localhost fixtures.
 - [ ] Identify initial implementation or audit tasks.
 - [ ] Prioritize remediation/build items with Russ.
 
