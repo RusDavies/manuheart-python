@@ -1,97 +1,107 @@
 # Code Analysis Improvement Opportunities
 
-Status: Review completed 2026-06-02.
+Status: Review refreshed 2026-06-02 after legacy config removal.
 
 ## Scope reviewed
 
-Reviewed current `src/manuheart/`, tests, scripts, docs, packaging metadata, and ignored/generated files. Verification during review:
+Reviewed current `src/manuheart/`, tests, scripts, docs, packaging metadata, and examples on `main` after the legacy Bash config surface was removed.
+
+Verification during review:
 
 - `ruff check src tests scripts`: passed.
-- `pytest -q`: 28 passed.
-- grep for `TODO`, `FIXME`, broad exception handlers, `type: ignore`, and `noqa` found only known boundary cases.
+- `mypy src/manuheart`: passed.
+- `pytest -q`: 43 passed.
 
-Overall finding: the project is in good shape for a small internal tool. The architecture is clean: config parsing, domain models, health rollup, checkers, state loading, reporting, API, and CLI are separated. The improvement opportunities below are hardening/polish items, not structural panic. Refreshing, frankly.
+Overall finding: Manuheart Python is now in good shape for a small internal tool. The code is compact and separated cleanly across configuration, domain models, health rollup, checkers, previous-state loading, reporting, API, and CLI adapter layers. The remaining work is mostly semantics hardening and operational polish rather than structural repair.
 
-## Improvement opportunities
+## Recommended next improvements
 
-### 1. Harden previous-state loading against malformed report values
+### 1. Implement documented `unknown` and grace state semantics
 
-`state.py` tolerates missing and invalid JSON files, but individual malformed record values can still raise during `int(...)`, `Status(...)`, or `CheckType(...)` conversion.
+`docs/health-state-semantics.md` records the intended model:
 
-Examples:
+- hosts become `down` only after remaining non-`up` longer than grace allows;
+- `unknown` means insufficient stable evidence, not healthy;
+- group rollup must preserve host grace by allowing `unknown` hosts to keep a group `unknown` when they could still satisfy `min_count`;
+- critical `unknown` groups should make the parent system `unknown`, not `up`;
+- empty groups with `min_count > 0` should become `down` because they cannot satisfy their configured minimum.
 
-- `fail_count: "not-an-int"` can raise while loading previous host state.
-- unknown `status` values can raise instead of being treated as `unknown`.
-- malformed group `type` can raise while loading previous group state.
+Current implementation is close for host state but too blunt in group/system rollup. It can make systems `up` when critical groups are `unknown`, and group rollup does not distinguish "could still meet min_count if pending hosts recover" from "cannot meet min_count anymore".
 
-Impact: a bad or manually edited prior report can crash a check cycle before new reports are written.
+Suggested fix: update host/group/system rollup tests first, then adjust `health.py` to match the state-semantics document.
 
-Suggested fix: add safe conversion helpers for int, status, and check type, plus tests proving corrupted previous-state fields degrade to defaults with warnings or silent safe defaults.
+### 2. Add stricter structured config validation for unknown keys and numeric bounds
 
-### 2. Make HTTP checking less HEAD-only
+The JSON/YAML loader validates shape and required fields, but still accepts extra keys silently. It also does not consistently enforce numeric bounds.
 
-`HttpChecker` currently uses `client.head(host.url)` for every HTTP/S check. Some perfectly valid health endpoints reject `HEAD`, only implement `GET`, or return method-specific responses.
+Examples worth catching:
 
-Impact: false negatives for health endpoints that are healthy but do not support `HEAD`.
+- typo fields such as `min_cout`, `fallbak_to_get`, or `status_file`;
+- `min_count < 0`;
+- `check_period <= 0`;
+- HTTP/ICMP timeouts <= 0;
+- ICMP count <= 0;
+- ambiguous `failure_grace` values if the intended model is `-1` for infinite grace or positive integers otherwise.
 
-Suggested fix: add configurable HTTP method support, probably defaulting to `HEAD` for Bash-ish compatibility but allowing `GET`, or add `GET` fallback for `405 Method Not Allowed` / selected responses. Add tests with `httpx.MockTransport`.
+Impact: a small typo can produce a config that validates while not doing what the operator meant. That is how dashboards get haunted.
 
-### 3. Add stricter structured config validation and clearer errors
+Suggested fix: add allowed-key checks for top-level, `runtime`, `runtime.status_files`, `checks`, `checks.http`, `checks.icmp`, group entries, and host entries. Add numeric-bound helpers and targeted tests.
 
-JSON/YAML config parsing directly indexes required fields and converts values. Missing fields, wrong container types, invalid URLs for HTTP/S hosts, or invalid runtime/check settings can currently surface as generic `KeyError`, `TypeError`, or `ValueError` instead of clear `ConfigError`s.
+### 3. Catch per-host checker crashes in the health engine
 
-Legacy host parsing validates HTTP/S URLs, but structured JSON/YAML host parsing does not currently apply the same URL check.
+Built-in checkers generally return failed `CheckResult`s instead of raising, but injected or future checker implementations can still raise exceptions.
 
-Impact: user-facing validation can be less actionable, especially through CLI `validate-config`.
+Impact: one broken checker or one unexpected host failure can abort the whole health cycle and prevent report writing.
 
-Suggested fix: validate structured config shape explicitly, report field paths in `ConfigError`s, and apply the same HTTP/S URL checks used by legacy parsing.
+Suggested fix: wrap each `checker.check(host, group)` call in `run_health_cycle()`. Convert exceptions into non-`up` check results with safe diagnostic details. This keeps the health cycle pessimistic but resilient.
 
-### 4. Improve CLI error handling for operational commands
+### 4. Surface previous-state/report read degradation as warnings
 
-`validate-config` returns structured errors, but `check` and `daemon` let config/check/report exceptions propagate as Python tracebacks.
+Previous-state loading now degrades safely when reports are missing, malformed, or contain bad values. That is good. It is also silent.
 
-Impact: poor operator experience and noisy automation logs when configs or report destinations are wrong.
+Impact: operators may not know Manuheart ignored corrupt prior state, which affects grace/failure-count continuity.
 
-Suggested fix: catch expected `ConfigError`, unsupported format errors, checker/report write errors, print concise stderr messages, and return nonzero exit codes. Keep tracebacks available only under a debug flag if needed.
+Suggested fix: return state-load warnings, or add a small state-loading result object, and include warnings in `CheckRunResult.warnings` / CLI stderr.
 
-### 5. Improve daemon observability and shutdown behaviour
+### 5. Clarify or adjust relative path semantics for status files
 
-Daemon mode runs repeated cycles but currently does not print warnings, log cycle start/end, summarize results, or handle graceful shutdown explicitly.
+`var_dir` is resolved relative to the config file directory. Explicit `runtime.status_files.*` paths are also resolved relative to the config file directory, not relative to `var_dir`.
 
-Impact: harder to operate as a long-running internal service; failure diagnosis depends on external wrappers.
+Impact: defensible, but easy to misread. Operators may expect status files inside `var_dir` unless absolute.
 
-Suggested fix: add minimal logging hooks or structured stderr output, print config warnings once, handle `KeyboardInterrupt`/termination cleanly, and add bounded daemon tests around warning/error behaviour.
+Suggested fix: either document this explicitly in config docs/examples, or change explicit relative status file paths to resolve relative to `var_dir`. If changing behaviour, add tests and migration notes.
 
-### 6. Reuse/inject HTTP clients for efficiency and testability
+### 6. Tighten public API typing around extension points
 
-`HttpChecker` creates a new `httpx.Client` per host check. That is simple but inefficient for many HTTP/S hosts and makes transport injection awkward in tests.
+The project defines a `Checker` protocol, but public API signatures still use `Mapping[CheckType, Any]` for checker maps and `Any` for clocks, sleepers, and daemon event callbacks.
 
-Impact: more connection setup than necessary and clunkier tests/mocking.
+Impact: the implementation passes mypy, but the API contract is looser than the code intends.
 
-Suggested fix: allow a client factory or shared client lifecycle inside the checker, while preserving simple defaults. This can pair naturally with configurable method/fallback behaviour.
+Suggested fix: add type aliases/protocols such as `CheckerMap`, `Clock`, `Sleeper`, and `DaemonEventCallback`; use them in `api.py` and `health.py`.
 
-### 7. Add static typing gate and package typing marker
+### 7. Consider adding checker details to host reports
 
-The code uses type hints heavily, but there is no mypy/pyright-style gate and no `py.typed` marker for downstream typed consumers.
+`CheckResult.detail` currently influences no report output. Details such as `http status 503`, timeout text, DNS failure, or packet loss would make reports more useful during diagnosis.
 
-Impact: type regressions may slip through, and installed package typing support is incomplete.
+Impact: downstream users see `down` but not why.
 
-Suggested fix: add `py.typed`, include it in package data, and add a lightweight static type check gate once annotations are ready.
+Suggested fix: add an optional `detail` field to `HostState` and host reports, or add a separate diagnostic report if keeping status reports minimal matters more.
 
-### 8. Add dependency/security review gate before release
+### 8. Consider bounded check concurrency after deployment pressure appears
 
-Runtime dependencies are small (`httpx`, `icmplib`, optional `PyYAML`), but release posture should include dependency review.
+Checks are sequential today. That is fine for localhost and small smoke configs.
 
-Impact: small internal tools still inherit supply-chain risk. Annoying, but computers do that.
+Impact: once a real config contains many hosts, cycle duration becomes the sum of slow checks/timeouts.
 
-Suggested fix: add a release-readiness gate using an available scanner (`pip-audit`, `uv pip compile`/lock review, or equivalent) and document accepted dependency posture.
+Suggested fix: defer until needed, then add bounded concurrency with deterministic report ordering. Do not add async machinery merely for decorative complexity. We are writing a health checker, not summoning Kubernetes in a trench coat.
 
 ## Recommended priority
 
-1. Harden previous-state loading.
-2. Improve structured config validation/errors.
-3. Make HTTP checking configurable or add GET fallback.
-4. Improve CLI operational error handling.
-5. Then daemon observability, HTTP client reuse, static typing, and dependency review.
-
-Rationale: the first four reduce surprise crashes and false negatives, which matter most before treating this as a real internal health-checking tool.
+1. Implement documented `unknown`/grace state semantics.
+2. Add stricter config unknown-key and numeric-bound validation.
+3. Catch per-host checker crashes.
+4. Surface previous-state/report read warnings.
+5. Clarify status-file path semantics.
+6. Tighten API typing.
+7. Add checker details to reports if operators need them.
+8. Add bounded concurrency only after scale justifies it.

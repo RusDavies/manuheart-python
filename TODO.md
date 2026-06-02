@@ -39,7 +39,7 @@
 - [x] Implement CLI/API override application for config values and add precedence tests.
 - [x] Implement real ICMP and HTTP(S) checkers.
 - [x] Implement previous-state loading and atomic JSON report writing.
-- [x] Implement CLI commands and compatibility flags as thin adapters over the public API.
+- [x] Implement CLI commands as thin adapters over the public API.
 - [x] Add tests proving CLI behavior matches API behavior for equivalent inputs.
 - [x] Add smoke test for one-shot localhost run.
 - [x] Add daemon mode only after one-shot mode is solid.
@@ -65,6 +65,14 @@
 
 ## Code analysis improvement backlog
 
+- [ ] Implement documented host/group/system `unknown` and grace state semantics.
+- [ ] Add stricter structured config validation for unknown keys and numeric bounds.
+- [ ] Catch per-host checker crashes in the health engine and convert them to non-`up` check results.
+- [ ] Surface previous-state/report read degradation as warnings.
+- [ ] Clarify or adjust relative path semantics for status files.
+- [ ] Tighten public API typing around checker maps, clocks, sleepers, and daemon callbacks.
+- [ ] Consider adding checker detail fields to host reports.
+- [ ] Consider bounded check concurrency after real deployment scale requires it.
 - [x] Harden previous-state loading against malformed report values.
 - [x] Add stricter structured JSON/YAML config validation and clearer `ConfigError` messages.
 - [x] Make HTTP checking less HEAD-only, via configurable method or safe GET fallback.

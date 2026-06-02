@@ -59,6 +59,7 @@ Run the local verification gate:
 - [Scope](docs/scope.md)
 - [Requirements](docs/requirements.md)
 - [Architecture and deployment notes](docs/architecture-deployment-notes.md)
+- [Health state semantics](docs/health-state-semantics.md)
 - [Deployment test config](docs/deployment-test-config.md)
 - [Release posture](docs/release-posture.md)
 - [Security and privacy notes](docs/security-privacy-notes.md)
