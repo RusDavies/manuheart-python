@@ -137,3 +137,14 @@ Pre-merge gate on branch `daemon-observability-shutdown`:
 - `scripts/check_clean_install.py`: passed.
 
 Daemon mode now emits lifecycle/cycle events (`daemon starting`, `daemon cycle N completed`, and `daemon stopped after N cycle(s)`) through an API callback. The CLI wires those events to stderr. `KeyboardInterrupt` during daemon sleep is handled gracefully and returns the completed cycle count instead of leaking a traceback.
+
+## Evidence for HTTP client reuse/injection
+
+Pre-merge gate on branch `http-client-injection`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed.
+
+`HttpChecker` now accepts an injected HTTP client for cleaner tests and alternate callers. The default checker registry creates one shared `httpx.Client` for HTTP and HTTPS checks in a health cycle, and `run_health_cycle` closes default checker resources after the cycle completes.
