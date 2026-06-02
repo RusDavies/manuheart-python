@@ -173,3 +173,16 @@ Pre-merge gate on branch `dependency-security-gate`:
 - `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
 
 Added `pip-audit` to the development extra and added `scripts/check_dependency_security.py`, which audits the releasable dependency set from `pyproject.toml` while intentionally excluding dev-only tooling and the unpublished local package itself.
+
+## Evidence for remote repository and release posture decision
+
+Pre-merge gate on branch `release-posture-docs`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed with no issues across 11 source files.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_dependency_security.py`: passed; no known vulnerabilities found in releasable runtime dependencies plus optional YAML extra.
+- `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
+
+Documented the release posture in `docs/release-posture.md`: internal-only by default, no public repository or public PyPI publication, private repository only with explicit Russ approval, internal wheel/sdist artifacts only after the release-readiness gate, and no deployment against real monitored hosts without human approval.
