@@ -3,6 +3,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+dist/
+build/
 
 # Example/smoke-test runtime outputs
 examples/deployment-test/tmp/

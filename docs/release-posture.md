@@ -39,6 +39,8 @@ Recommended release path:
 3. Publish only to a private/internal package index if repeated installs need central distribution.
 4. Revisit public PyPI only if Manuheart becomes a general-purpose open-source tool.
 
+Repository-side trusted-publishing setup is documented in `docs/release/pypi-trusted-publishing.md`. That setup prepares the route to TestPyPI/PyPI, but human configuration in the PyPI/TestPyPI web UI is still required before trusted publishing can succeed.
+
 ## Release-readiness gate
 
 Before any internal release artifact is treated as releasable, run:
@@ -52,6 +54,8 @@ Before any internal release artifact is treated as releasable, run:
 .venv/bin/python -m manuheart validate-config --config examples/deployment-test/public-smoke.json
 .venv/bin/python -m manuheart check --config examples/deployment-test/public-smoke.json
 .venv/bin/python scripts/check_clean_install.py
+python -m build
+python -m twine check dist/*
 ```
 
 ## Internal baseline tag posture

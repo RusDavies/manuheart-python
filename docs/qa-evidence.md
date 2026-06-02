@@ -360,3 +360,28 @@ Release-readiness gate on branch `release-readiness-v0.1.0`:
 - `scripts/check_clean_install.py`: passed.
 
 Added `CHANGELOG.md` with internal `v0.1.0` baseline notes, linked it from the README, and documented the internal baseline tag posture in `docs/release-posture.md`. This is an internal source-control baseline only; it does not approve public PyPI publication, public repository visibility, or deployment against real monitored hosts.
+
+## Evidence for PyPI trusted-publishing setup
+
+Repository-side trusted-publishing setup on branch `pypi-trusted-publishing-setup`:
+
+- Added `.github/workflows/publish.yml` with build, TestPyPI, and PyPI publish jobs using GitHub OIDC trusted publishing.
+- Added `docs/release/pypi-trusted-publishing.md` with exact TestPyPI/PyPI pending-publisher fields.
+- Added `release` optional dependency group and included `build`/`twine` in `dev`.
+- Confirmed `https://pypi.org/pypi/manuheart/json` returned 404 during setup, so the name appears unclaimed on PyPI, subject to PyPI policy/normalization checks at publish time.
+
+Gate results:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 83 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `python -m build`: passed.
+- `twine check dist/*`: passed.
+- Workflow YAML parsed successfully with PyYAML.
+
+No package was published by this setup pass. Human setup is still required in TestPyPI/PyPI trusted-publisher settings before the workflow can publish.

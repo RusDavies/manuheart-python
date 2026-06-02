@@ -19,13 +19,23 @@ dependencies = [
 
 [project.optional-dependencies]
 yaml = ["PyYAML>=6.0"]
+release = [
+  "build>=1.2",
+  "twine>=5.1",
+]
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
   "mypy>=1.10",
   "types-PyYAML>=6.0",
   "pip-audit>=2.10",
+  "build>=1.2",
+  "twine>=5.1",
 ]
+
+[project.urls]
+Repository = "https://github.com/RusDavies/manuheart-python"
+Changelog = "https://github.com/RusDavies/manuheart-python/blob/main/CHANGELOG.md"
 
 [project.scripts]
 manuheart = "manuheart.cli:main"
