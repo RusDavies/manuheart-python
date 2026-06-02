@@ -48,4 +48,6 @@ Writes are atomic temp-file-and-replace operations.
 
 ## Repository and release posture
 
-Current posture: internal-only. No public repository, public package publication, or shared-infrastructure deployment should happen without explicit Russ approval. See `docs/release-posture.md`.
+Current posture: internal-only with a private GitHub remote. No public repository, public package publication, or shared-infrastructure deployment should happen without explicit Russ approval. See `docs/release-posture.md`.
+
+For deployment smoke testing without real infrastructure, use `examples/deployment-test/public-smoke.json`; see `docs/deployment-test-config.md`.

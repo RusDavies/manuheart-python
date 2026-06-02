@@ -186,3 +186,20 @@ Pre-merge gate on branch `release-posture-docs`:
 - `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
 
 Documented the release posture in `docs/release-posture.md`: internal-only by default, no public repository or public PyPI publication, private repository only with explicit Russ approval, internal wheel/sdist artifacts only after the release-readiness gate, and no deployment against real monitored hosts without human approval.
+
+## Evidence for private remote and public deployment-smoke config
+
+Pre-merge gate on branch `remote-and-public-smoke-config`:
+
+- Private GitHub remote created: `https://github.com/RusDavies/manuheart-python`.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed; generated disposable reports under `examples/deployment-test/tmp/public-smoke-reports/`.
+- Public smoke result at run time: `public-smoke` system status `up`; HTTP checks for `example.com`, `www.iana.org`, and Cloudflare trace were `up`; ICMP checks for `1.1.1.1` and `8.8.8.8` were `up`.
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed with no issues across 11 source files.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_dependency_security.py`: passed; no known vulnerabilities found in releasable runtime dependencies plus optional YAML extra.
+- `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
+
+Added `examples/deployment-test/public-smoke.json` and `docs/deployment-test-config.md` for deployment smoke testing against a tiny set of well-known public endpoints. Generated smoke-test reports are ignored via `.gitignore`.

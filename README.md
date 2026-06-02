@@ -102,3 +102,4 @@ See:
 - `docs/bash-implementation-understanding.md`
 - `docs/python-architecture-proposal.md`
 - `docs/release-posture.md`
+- `docs/deployment-test-config.md`

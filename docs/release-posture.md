@@ -11,15 +11,15 @@ No public repository, package index publication, or deployment into shared infra
 ## Current repository state
 
 - Local repository: `projects/manuheart-python`
-- Remote repository: none configured at the time this posture was recorded
+- Remote repository: private GitHub repository `https://github.com/RusDavies/manuheart-python`
 - Package name in local metadata: `manuheart`
 - Versioning scheme for local/internal builds: normal Python package versions, currently `0.1.0`
 
 ## Recommended remote posture
 
-If Russ wants a remote repository, create a **private** repository first.
+Russ approved creating the private remote. Keep it private unless Russ explicitly approves a public release.
 
-Recommended default:
+Current default:
 
 - private GitHub repository under the existing Russ-owned namespace or agreed internal organization;
 - protect `main` once external collaboration starts;
