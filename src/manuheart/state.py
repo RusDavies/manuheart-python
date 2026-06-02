@@ -23,6 +23,16 @@ def _safe_json(path: Path) -> dict:
         return {}
 
 
+def _pick(item: dict, preferred: str, legacy: str, default: object) -> object:
+    return item.get(preferred, item.get(legacy, default))
+
+
+def _bool_value(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).lower() in {"yes", "true", "1"}
+
+
 def load_previous_hosts(config: EffectiveConfig) -> dict[str, HostState]:
     payload = _safe_json(config.reports.hosts)
     result: dict[str, HostState] = {}
@@ -31,9 +41,9 @@ def load_previous_hosts(config: EffectiveConfig) -> dict[str, HostState]:
             name=str(item.get("name", "")),
             group=str(item.get("group", "")),
             url=str(item.get("url", "")),
-            last_up=str(item.get("lastUp", "unknown")),
-            last_checked=str(item.get("lastChecked", "unknown")),
-            fail_count=int(item.get("failCount", 0)),
+            last_up=str(_pick(item, "last_up", "lastUp", "unknown")),
+            last_checked=str(_pick(item, "last_checked", "lastChecked", "unknown")),
+            fail_count=int(_pick(item, "fail_count", "failCount", 0)),
             status=Status(str(item.get("status", Status.UNKNOWN.value))),
         )
         if state.name and state.group:
@@ -53,13 +63,13 @@ def load_previous_groups(config: EffectiveConfig) -> dict[str, GroupState]:
         result[name] = GroupState(
             name=name,
             system=str(item.get("system", "")),
-            critical=str(item.get("critical", "no")).lower() in {"yes", "true", "1"},
+            critical=_bool_value(item.get("critical", False)),
             check_type=CheckType(str(item.get("type", "icmp"))),
-            min_count=int(item.get("minCount", 0)),
-            failure_grace=int(item.get("failGrace", 0)),
-            last_up=str(item.get("lastUp", "unknown")),
-            last_checked=str(item.get("lastChecked", "unknown")),
-            instance_count=int(item.get("instanceCount", 0)),
+            min_count=int(_pick(item, "min_count", "minCount", 0)),
+            failure_grace=int(_pick(item, "failure_grace", "failGrace", 0)),
+            last_up=str(_pick(item, "last_up", "lastUp", "unknown")),
+            last_checked=str(_pick(item, "last_checked", "lastChecked", "unknown")),
+            instance_count=int(_pick(item, "instance_count", "instanceCount", 0)),
             status=Status(str(item.get("status", Status.UNKNOWN.value))),
         )
     return result
@@ -74,9 +84,9 @@ def load_previous_systems(config: EffectiveConfig) -> dict[str, SystemState]:
             continue
         result[name] = SystemState(
             name=name,
-            last_up=str(item.get("lastUp", "unknown")),
-            last_checked=str(item.get("lastChecked", "unknown")),
-            failure_count=int(item.get("failureCount", 0)),
+            last_up=str(_pick(item, "last_up", "lastUp", "unknown")),
+            last_checked=str(_pick(item, "last_checked", "lastChecked", "unknown")),
+            failure_count=int(_pick(item, "failure_count", "failureCount", 0)),
             status=Status(str(item.get("status", Status.UNKNOWN.value))),
         )
     return result
