@@ -20,6 +20,14 @@ class NamedFakeChecker:
         return CheckResult(self.outcomes.get(host.name, True), "fake")
 
 
+class ExplodingChecker:
+    def check(self, host, group):
+        _ = group
+        if host.name == "bad-a":
+            raise RuntimeError("boom")
+        return CheckResult(True, "fake")
+
+
 def test_health_rollup_up():
     loaded = load_config("examples/localhost/manuheart.json")
     result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "now")
@@ -130,6 +138,70 @@ def test_group_goes_down_when_pending_hosts_cannot_satisfy_min_count():
     assert second.hosts["frontend-http/frontend-b"].status == Status.DOWN
     assert second.groups["frontend-http"].status == Status.DOWN
     assert second.systems["synthetic-web"].status == Status.DOWN
+
+
+def test_checker_exception_marks_only_that_host_non_up_and_cycle_continues(tmp_path):
+    config = tmp_path / "manuheart.json"
+    config.write_text(
+        json.dumps(
+            {
+                "groups": [
+                    {
+                        "name": "g",
+                        "system": "s",
+                        "critical": True,
+                        "type": "icmp",
+                        "min_count": 1,
+                        "failure_grace": 1,
+                    }
+                ],
+                "hosts": [
+                    {"name": "bad-a", "group": "g", "url": "n/a"},
+                    {"name": "good-a", "group": "g", "url": "n/a"},
+                ],
+            }
+        )
+    )
+
+    result = run_check(
+        load_config(config),
+        checkers={CheckType.ICMP: ExplodingChecker()},
+        clock=lambda: "now",
+    )
+
+    assert result.hosts["g/bad-a"].status == Status.UNKNOWN
+    assert result.hosts["g/good-a"].status == Status.UP
+    assert result.groups["g"].status == Status.UP
+    assert result.systems["s"].status == Status.UP
+    assert result.warnings == ("g/bad-a: checker error: boom",)
+
+
+def test_missing_checker_marks_matching_hosts_non_up_and_cycle_continues(tmp_path):
+    config = tmp_path / "manuheart.json"
+    config.write_text(
+        json.dumps(
+            {
+                "groups": [
+                    {
+                        "name": "g",
+                        "system": "s",
+                        "critical": True,
+                        "type": "icmp",
+                        "min_count": 1,
+                        "failure_grace": 1,
+                    }
+                ],
+                "hosts": [{"name": "h", "group": "g", "url": "n/a"}],
+            }
+        )
+    )
+
+    result = run_check(load_config(config), checkers={}, clock=lambda: "now")
+
+    assert result.hosts["g/h"].status == Status.UNKNOWN
+    assert result.groups["g"].status == Status.UNKNOWN
+    assert result.systems["s"].status == Status.UNKNOWN
+    assert result.warnings == ("g/h: no checker for icmp",)
 
 
 def test_default_http_checker_reuses_one_client_per_cycle(tmp_path, monkeypatch):

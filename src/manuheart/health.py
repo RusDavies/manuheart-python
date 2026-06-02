@@ -148,14 +148,24 @@ def run_health_cycle(
     previous_systems: Mapping[str, SystemState] | None = None,
 ) -> CheckRunResult:
     now = _now(clock)
-    checker_map = checkers or default_checkers(config.effective)
+    checker_map = default_checkers(config.effective) if checkers is None else checkers
     host_states: dict[str, HostState] = {}
+    warnings = list(config.warnings)
     try:
         for key in sorted(config.hosts):
             host = config.hosts[key]
             group = config.groups[host.group]
-            checker = checker_map[group.check_type]
-            check_result = checker.check(host, group)
+            try:
+                checker = checker_map[group.check_type]
+            except KeyError:
+                check_result = CheckResult(False, f"no checker for {group.check_type.value}")
+                warnings.append(f"{key}: {check_result.detail}")
+            else:
+                try:
+                    check_result = checker.check(host, group)
+                except Exception as exc:  # noqa: BLE001 - checker boundary degrades per host
+                    check_result = CheckResult(False, f"checker error: {exc}")
+                    warnings.append(f"{key}: {check_result.detail}")
             host_states[key] = update_host_state(
                 (previous_hosts or {}).get(key), host, group, check_result, now
             )
@@ -177,5 +187,5 @@ def run_health_cycle(
         hosts=host_states,
         groups=group_states,
         systems=system_states,
-        warnings=config.warnings,
+        warnings=tuple(warnings),
     )

@@ -259,3 +259,17 @@ Pre-merge gate on branch `stricter-config-validation`:
 - `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
 
 Added strict unknown-key checks for top-level config, `runtime`, `runtime.status_files`, `checks`, `checks.http`, `checks.icmp`, group entries, and host entries. Added numeric bounds validation for log level, check period, HTTP/ICMP timeouts, ICMP count, group `min_count`, and group `failure_grace`, plus `runtime.run_mode` validation. Added targeted tests for these cases.
+
+## Evidence for per-host checker exception handling
+
+Pre-merge gate on branch `handle-checker-exceptions`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 65 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+
+Updated `run_health_cycle()` so checker lookup failures and checker exceptions are converted into per-host non-`up` check results with warnings instead of aborting the whole cycle. Added tests proving one exploding host check does not prevent other hosts/groups/systems from being reported, and that an explicitly empty injected checker map remains empty rather than silently falling back to default checkers.
