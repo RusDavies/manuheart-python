@@ -11,6 +11,7 @@ from icmplib import ping
 from manuheart.models import CheckResult, EffectiveConfig, GroupDefinition, HostDefinition
 
 _HOST_RE = re.compile(r"^[A-Za-z0-9_.:-]+$")
+_HEAD_FALLBACK_STATUS_CODES = {405, 501}
 
 
 @dataclass(slots=True)
@@ -51,7 +52,16 @@ class HttpChecker:
         )
         try:
             with httpx.Client(follow_redirects=True, timeout=timeout) as client:
-                response = client.head(host.url)
+                method = self.config.http.method.upper()
+                if method not in {"HEAD", "GET"}:
+                    return CheckResult(False, f"invalid http method {method!r}")
+                response = client.request(method, host.url)
+                if (
+                    method == "HEAD"
+                    and self.config.http.fallback_to_get
+                    and response.status_code in _HEAD_FALLBACK_STATUS_CODES
+                ):
+                    response = client.get(host.url)
         except httpx.HTTPError as exc:
             return CheckResult(False, str(exc))
         return CheckResult(

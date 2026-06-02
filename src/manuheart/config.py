@@ -96,6 +96,13 @@ def _required(item: Mapping[str, Any], field: str, path: str) -> Any:
     return value
 
 
+def _http_method(value: Any, name: str) -> str:
+    method = str(value).strip().upper()
+    if method not in {"HEAD", "GET"}:
+        raise ConfigError(f"{name} must be HEAD or GET")
+    return method
+
+
 def _expand(value: str, macros: Mapping[str, Path]) -> str:
     result = str(value).strip().strip('"').strip("'")
     for key, replacement in macros.items():
@@ -316,6 +323,8 @@ def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> Effective
         http=HttpCheckSettings(
             connect_timeout=_float(http.get("connect_timeout", 3), "checks.http.connect_timeout"),
             max_time=_float(http.get("max_time", 5), "checks.http.max_time"),
+            method=_http_method(http.get("method", "HEAD"), "checks.http.method"),
+            fallback_to_get=_bool(http.get("fallback_to_get", True)),
         ),
         icmp=IcmpCheckSettings(
             timeout=_float(icmp.get("timeout", 1), "checks.icmp.timeout"),
