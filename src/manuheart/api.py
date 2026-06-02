@@ -125,6 +125,7 @@ def run_daemon(
     clock: Any | None = None,
     sleep: Any | None = None,
     max_cycles: int | None = None,
+    on_event: Any | None = None,
 ) -> int:
     """Run repeated check cycles. Primarily used by the CLI daemon adapter."""
 
@@ -132,10 +133,18 @@ def run_daemon(
 
     sleeper = sleep or time.sleep
     cycles = 0
-    while True:
-        result = run_check(config, checkers=checkers, clock=clock)
-        write_reports(result)
-        cycles += 1
-        if max_cycles is not None and cycles >= max_cycles:
-            return cycles
-        sleeper(config.effective.check_period)
+    emit = on_event or (lambda _message: None)
+    emit("daemon starting")
+    try:
+        while True:
+            result = run_check(config, checkers=checkers, clock=clock)
+            write_reports(result)
+            cycles += 1
+            emit(f"daemon cycle {cycles} completed")
+            if max_cycles is not None and cycles >= max_cycles:
+                emit(f"daemon stopped after {cycles} cycle{'s' if cycles != 1 else ''}")
+                return cycles
+            sleeper(config.effective.check_period)
+    except KeyboardInterrupt:
+        emit(f"daemon stopped after {cycles} cycle{'s' if cycles != 1 else ''}")
+        return cycles

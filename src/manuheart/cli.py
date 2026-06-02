@@ -20,6 +20,10 @@ def _print_error(exc: Exception) -> None:
     print(f"ERROR: {exc}", file=sys.stderr)
 
 
+def _print_daemon_event(message: str) -> None:
+    print(message, file=sys.stderr)
+
+
 def _add_config_args(parser: argparse.ArgumentParser, *, required: bool = True) -> None:
     parser.add_argument("--config", required=required, help="configuration file")
     parser.add_argument(
@@ -110,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             loaded = load_config(args.config, config_format=args.config_format, overrides=overrides)
             cycles = getattr(args, "max_cycles", None)
-            run_daemon(loaded, max_cycles=cycles)
+            run_daemon(loaded, max_cycles=cycles, on_event=_print_daemon_event)
         except Exception as exc:  # noqa: BLE001 - CLI boundary prints clean operational errors
             _print_error(exc)
             return 1

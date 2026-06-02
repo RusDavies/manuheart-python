@@ -126,3 +126,14 @@ Pre-merge gate on branch `cli-error-handling`:
 - `scripts/check_clean_install.py`: passed.
 
 The `check` and `daemon` CLI commands now catch operational failures at the adapter boundary, print concise `ERROR: ...` messages to stderr, and exit `1` instead of leaking Python tracebacks. Added subprocess tests for report-write failure and daemon config-load failure.
+
+## Evidence for daemon observability and graceful shutdown
+
+Pre-merge gate on branch `daemon-observability-shutdown`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 44 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed.
+
+Daemon mode now emits lifecycle/cycle events (`daemon starting`, `daemon cycle N completed`, and `daemon stopped after N cycle(s)`) through an API callback. The CLI wires those events to stderr. `KeyboardInterrupt` during daemon sleep is handled gracefully and returns the completed cycle count instead of leaking a traceback.

@@ -69,7 +69,7 @@
 - [x] Add stricter structured JSON/YAML config validation and clearer `ConfigError` messages.
 - [x] Make HTTP checking less HEAD-only, via configurable method or safe GET fallback.
 - [x] Improve CLI error handling for `check` and `daemon` operational failures.
-- [ ] Improve daemon observability and graceful shutdown behaviour.
+- [x] Improve daemon observability and graceful shutdown behaviour.
 - [ ] Reuse or inject HTTP clients for efficiency and cleaner checker tests.
 - [ ] Add static typing gate and package typing marker (`py.typed`).
 - [ ] Add dependency/security review gate before release.
