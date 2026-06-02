@@ -39,7 +39,9 @@ def main() -> int:
             [
                 str(python),
                 "-c",
+                "from importlib.resources import files; "
                 "from manuheart.api import load_config, run_check; "
+                "assert (files('manuheart') / 'py.typed').is_file(); "
                 "cfg = load_config('examples/localhost/manuheart.json'); "
                 "result = run_check(cfg); "
                 "assert result.hosts and result.groups and result.systems",

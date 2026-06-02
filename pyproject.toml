@@ -19,13 +19,16 @@ dependencies = [
 
 [project.optional-dependencies]
 yaml = ["PyYAML>=6.0"]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10", "types-PyYAML>=6.0"]
 
 [project.scripts]
 manuheart = "manuheart.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/manuheart"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/manuheart/py.typed" = "manuheart/py.typed"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -37,3 +40,14 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["manuheart"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = ["icmplib"]
+ignore_missing_imports = true

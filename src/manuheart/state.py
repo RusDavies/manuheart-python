@@ -46,7 +46,7 @@ def _safe_str(value: object, default: str = "unknown") -> str:
 
 def _safe_int(value: object, default: int = 0) -> int:
     try:
-        return int(value)
+        return int(str(value))
     except (TypeError, ValueError):
         return default
 

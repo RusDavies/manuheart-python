@@ -71,5 +71,5 @@
 - [x] Improve CLI error handling for `check` and `daemon` operational failures.
 - [x] Improve daemon observability and graceful shutdown behaviour.
 - [x] Reuse or inject HTTP clients for efficiency and cleaner checker tests.
-- [ ] Add static typing gate and package typing marker (`py.typed`).
+- [x] Add static typing gate and package typing marker (`py.typed`).
 - [ ] Add dependency/security review gate before release.

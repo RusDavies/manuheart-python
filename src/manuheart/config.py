@@ -140,11 +140,30 @@ def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -
     unknown = set(overrides) - allowed
     if unknown:
         raise ConfigError(f"unknown config override(s): {', '.join(sorted(unknown))}")
+    values = dict(overrides)
+    path_fields = {
+        "var_dir",
+        "log_file",
+        "host_file",
+        "group_file",
+        "host_status_file",
+        "group_status_file",
+        "system_status_file",
+    }
+    for field in path_fields:
+        if values.get(field) is not None:
+            values[field] = Path(values[field])
     return ConfigOverrides(
-        **{
-            key: Path(value) if key.endswith(("dir", "file")) and value is not None else value
-            for key, value in overrides.items()
-        }
+        var_dir=values.get("var_dir"),
+        log_file=values.get("log_file"),
+        log_level=values.get("log_level"),
+        check_period=values.get("check_period"),
+        run_mode=values.get("run_mode"),
+        host_file=values.get("host_file"),
+        group_file=values.get("group_file"),
+        host_status_file=values.get("host_status_file"),
+        group_status_file=values.get("group_status_file"),
+        system_status_file=values.get("system_status_file"),
     )
 
 
@@ -252,7 +271,7 @@ def _structured_definitions(
             raise ConfigError(
                 f"{path}.type has unsupported check type: {check_type_value!r}"
             ) from exc
-        definition = GroupDefinition(
+        group_definition = GroupDefinition(
             name=name,
             system=system,
             critical=critical,
@@ -262,28 +281,28 @@ def _structured_definitions(
                 _required(item, "failure_grace", path), f"{path}.failure_grace"
             ),
         )
-        if definition.name in groups:
-            raise ConfigError(f"duplicate group {definition.name!r}")
-        groups[definition.name] = definition
+        if group_definition.name in groups:
+            raise ConfigError(f"duplicate group {group_definition.name!r}")
+        groups[group_definition.name] = group_definition
     hosts: dict[str, HostDefinition] = {}
     for idx, raw_item in enumerate(_list(data.get("hosts", []), "hosts")):
         path = f"hosts[{idx}]"
         item = _mapping(raw_item, path)
-        definition = HostDefinition(
+        host_definition = HostDefinition(
             name=str(_required(item, "name", path)),
             group=str(_required(item, "group", path)),
             url=str(_required(item, "url", path)),
         )
-        if definition.group not in groups:
-            raise ConfigError(f"host {definition.key!r} references unknown group")
-        if definition.key in hosts:
-            raise ConfigError(f"duplicate host {definition.key!r}")
-        if groups[definition.group].check_type in {
+        if host_definition.group not in groups:
+            raise ConfigError(f"host {host_definition.key!r} references unknown group")
+        if host_definition.key in hosts:
+            raise ConfigError(f"duplicate host {host_definition.key!r}")
+        if groups[host_definition.group].check_type in {
             CheckType.HTTP,
             CheckType.HTTPS,
-        } and not definition.url.startswith(("http://", "https://")):
+        } and not host_definition.url.startswith(("http://", "https://")):
             raise ConfigError(f"{path} URL must start with http:// or https://")
-        hosts[definition.key] = definition
+        hosts[host_definition.key] = host_definition
     return groups, hosts
 
 
@@ -414,7 +433,7 @@ def _load_json(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
 
 def _load_yaml(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
     try:
-        import yaml  # type: ignore[import-not-found]
+        import yaml
     except ModuleNotFoundError as exc:
         raise UnsupportedConfigFormatError(
             "YAML config requires the optional PyYAML dependency"
