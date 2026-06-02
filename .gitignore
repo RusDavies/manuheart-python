@@ -3,3 +3,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+
+# Deployment smoke-test outputs
+examples/deployment-test/tmp/

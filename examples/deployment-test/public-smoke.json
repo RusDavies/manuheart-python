@@ -1,0 +1,80 @@
+{
+  "runtime": {
+    "run_mode": "once",
+    "check_period": 60,
+    "status_files": {
+      "hosts": "tmp/public-smoke-reports/hoststatus",
+      "groups": "tmp/public-smoke-reports/groupstatus",
+      "systems": "tmp/public-smoke-reports/sysstatus"
+    }
+  },
+  "checks": {
+    "http": {
+      "method": "GET",
+      "fallback_to_get": true,
+      "connect_timeout": 3,
+      "max_time": 8
+    }
+  },
+  "groups": [
+    {
+      "system": "public-smoke",
+      "name": "example-http",
+      "type": "http",
+      "critical": true,
+      "min_count": 1,
+      "failure_grace": 1
+    },
+    {
+      "system": "public-smoke",
+      "name": "iana-http",
+      "type": "http",
+      "critical": false,
+      "min_count": 1,
+      "failure_grace": 1
+    },
+    {
+      "system": "public-smoke",
+      "name": "cloudflare-trace-http",
+      "type": "http",
+      "critical": false,
+      "min_count": 1,
+      "failure_grace": 1
+    },
+    {
+      "system": "public-smoke",
+      "name": "public-dns-icmp",
+      "type": "icmp",
+      "critical": false,
+      "min_count": 1,
+      "failure_grace": 1
+    }
+  ],
+  "hosts": [
+    {
+      "name": "example.com",
+      "group": "example-http",
+      "url": "https://example.com/"
+    },
+    {
+      "name": "www.iana.org",
+      "group": "iana-http",
+      "url": "https://www.iana.org/"
+    },
+    {
+      "name": "www.cloudflare.com",
+      "group": "cloudflare-trace-http",
+      "url": "https://www.cloudflare.com/cdn-cgi/trace"
+    },
+    {
+      "name": "1.1.1.1",
+      "group": "public-dns-icmp",
+      "url": "n/a"
+    },
+    {
+      "name": "8.8.8.8",
+      "group": "public-dns-icmp",
+      "url": "n/a"
+    }
+  ]
+}
