@@ -16,6 +16,10 @@ from manuheart.api import (
 )
 
 
+def _print_error(exc: Exception) -> None:
+    print(f"ERROR: {exc}", file=sys.stderr)
+
+
 def _add_config_args(parser: argparse.ArgumentParser, *, required: bool = True) -> None:
     parser.add_argument("--config", required=required, help="configuration file")
     parser.add_argument(
@@ -91,17 +95,25 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if result.valid else 1
 
     if command == "check":
-        loaded = load_config(args.config, config_format=args.config_format, overrides=overrides)
-        result = run_check(loaded)
-        write_reports(result)
-        for warning in result.warnings:
-            print(f"WARNING: {warning}", file=sys.stderr)
+        try:
+            loaded = load_config(args.config, config_format=args.config_format, overrides=overrides)
+            result = run_check(loaded)
+            write_reports(result)
+            for warning in result.warnings:
+                print(f"WARNING: {warning}", file=sys.stderr)
+        except Exception as exc:  # noqa: BLE001 - CLI boundary prints clean operational errors
+            _print_error(exc)
+            return 1
         return 0
 
     if command == "daemon":
-        loaded = load_config(args.config, config_format=args.config_format, overrides=overrides)
-        cycles = getattr(args, "max_cycles", None)
-        run_daemon(loaded, max_cycles=cycles)
+        try:
+            loaded = load_config(args.config, config_format=args.config_format, overrides=overrides)
+            cycles = getattr(args, "max_cycles", None)
+            run_daemon(loaded, max_cycles=cycles)
+        except Exception as exc:  # noqa: BLE001 - CLI boundary prints clean operational errors
+            _print_error(exc)
+            return 1
         return 0
 
     parser.error(f"unknown command: {command}")

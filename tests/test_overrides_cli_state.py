@@ -123,6 +123,57 @@ def test_daemon_max_cycles_for_bounded_smoke(tmp_path):
     assert completed.returncode == 0, completed.stderr
 
 
+def test_cli_check_reports_operational_errors_without_traceback(tmp_path):
+    hoststatus_dir = tmp_path / "hoststatus"
+    hoststatus_dir.mkdir()
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "manuheart",
+            "check",
+            "--config",
+            "examples/localhost/manuheart.json",
+            "--host-status-file",
+            str(hoststatus_dir),
+            "--group-status-file",
+            str(tmp_path / "groupstatus"),
+            "--sys-status-file",
+            str(tmp_path / "sysstatus"),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 1
+    assert "ERROR:" in completed.stderr
+    assert "Traceback" not in completed.stderr
+
+
+def test_cli_daemon_reports_config_errors_without_traceback():
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "manuheart",
+            "daemon",
+            "--config",
+            "does-not-exist.json",
+            "--max-cycles",
+            "1",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 1
+    assert "ERROR:" in completed.stderr
+    assert "does-not-exist.json" in completed.stderr
+    assert "Traceback" not in completed.stderr
+
+
 def test_status_type_from_previous_state(tmp_path):
     destinations = ReportDestinations(
         hosts=tmp_path / "hoststatus",
