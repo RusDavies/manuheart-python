@@ -57,3 +57,13 @@ Russ confirmed clean typed reports should keep the same top-level report files a
 - `sysstatus` containing `systems`
 
 Implication: report continuity should be preserved at the file/top-level collection level, while individual fields should become cleaner typed JSON values where practical.
+
+## Status value decision
+
+Russ confirmed status values should remain enum-like strings:
+
+- `"up"`
+- `"down"`
+- `"unknown"`
+
+Implication: clean typed output should convert numeric and boolean fields to JSON numbers/booleans where practical, but status remains a human-readable string value.

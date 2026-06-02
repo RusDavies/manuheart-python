@@ -49,6 +49,7 @@
 
 - [ ] Preserve report filenames and top-level keys while converting inner fields to cleaner typed JSON.
 - [ ] Implement clean typed report output as the default Python report format.
+- [ ] Keep report status fields as enum-like strings (`up`, `down`, `unknown`).
 - [ ] Add tests proving report fields use typed JSON values where practical.
 - [x] Decide whether safe real-world Bash configs can be used as compatibility fixtures.
 - [ ] Add broader synthetic compatibility fixtures after exact localhost output matching is resolved.
