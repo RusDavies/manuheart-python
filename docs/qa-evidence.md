@@ -385,3 +385,21 @@ Gate results:
 - Workflow YAML parsed successfully with PyYAML.
 
 No package was published by this setup pass. Human setup is still required in TestPyPI/PyPI trusted-publisher settings before the workflow can publish.
+
+## Evidence for v0.1.1 PyPI trusted-publishing release
+
+Release gate on branch `release-v0.1.1`:
+
+- README Markdown links checked: no relative document links remained.
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 83 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed.
+- `scripts/check_clean_install.py`: passed and built/installed `manuheart==0.1.1`.
+- `python -m build`: passed, producing wheel and sdist for `0.1.1`.
+- `twine check dist/*`: passed.
+
+This release bumps package metadata to `0.1.1` so the public PyPI release is cut from the current README/trusted-publishing state rather than the older internal `v0.1.0` baseline tag.
