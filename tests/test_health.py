@@ -9,6 +9,14 @@ class FakeChecker:
         return CheckResult(self.healthy, "fake")
 
 
+class NamedFakeChecker:
+    def __init__(self, outcomes):
+        self.outcomes = outcomes
+
+    def check(self, host, group):
+        return CheckResult(self.outcomes.get(host.name, True), "fake")
+
+
 def test_health_rollup_up():
     loaded = load_config("examples/localhost/manuheart.json")
     result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "now")
@@ -24,3 +32,39 @@ def test_health_rollup_down_after_grace():
     assert result.hosts["localhost-icmp/127.0.0.1"].status == Status.DOWN
     assert result.groups["localhost-icmp"].status == Status.DOWN
     assert result.systems["localhost-system"].status == Status.DOWN
+
+
+def test_synthetic_fixture_rolls_up_multiple_check_types_and_systems():
+    loaded = load_config("examples/synthetic-compat/manuheart.json")
+    checkers = {
+        CheckType.HTTP: NamedFakeChecker({"frontend-a": True, "frontend-b": False}),
+        CheckType.HTTPS: NamedFakeChecker({"api-a": True}),
+        CheckType.ICMP: NamedFakeChecker({"batch-a": True}),
+    }
+
+    result = run_check(loaded, checkers=checkers, clock=lambda: "2026-06-02T00:00:00Z")
+
+    assert result.hosts["frontend-http/frontend-a"].status == Status.UP
+    assert result.hosts["frontend-http/frontend-b"].status == Status.DOWN
+    assert result.groups["frontend-http"].instance_count == 1
+    assert result.groups["frontend-http"].status == Status.DOWN
+    assert result.groups["api-https"].status == Status.UP
+    assert result.groups["optional-workers"].status == Status.UNKNOWN
+    assert result.systems["synthetic-web"].status == Status.DOWN
+    assert result.systems["synthetic-batch"].status == Status.UP
+
+
+def test_synthetic_fixture_failure_grace_preserves_unknown_before_threshold():
+    loaded = load_config("examples/synthetic-compat/manuheart.json")
+    checkers = {
+        CheckType.HTTP: NamedFakeChecker({"frontend-a": True, "frontend-b": True}),
+        CheckType.HTTPS: NamedFakeChecker({"api-a": False}),
+        CheckType.ICMP: NamedFakeChecker({"batch-a": True}),
+    }
+
+    result = run_check(loaded, checkers=checkers, clock=lambda: "2026-06-02T00:00:00Z")
+
+    assert result.hosts["api-https/api-a"].fail_count == 1
+    assert result.hosts["api-https/api-a"].status == Status.UNKNOWN
+    assert result.groups["api-https"].status == Status.DOWN
+    assert result.systems["synthetic-web"].status == Status.DOWN

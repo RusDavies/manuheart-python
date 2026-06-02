@@ -42,3 +42,13 @@ Pre-merge gate on branch `tighten-localhost-compatibility-check`:
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences for field renames, typed numeric/boolean values, and ISO-8601 timestamps.
 
 See `docs/localhost-compatibility-differences.md` for the current hard compatibility contract and accepted localhost Bash-vs-Python output differences.
+
+## Evidence for broader synthetic compatibility fixtures
+
+Pre-merge gate on branch `add-synthetic-compat-fixtures`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 28 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+
+Added `examples/synthetic-compat/` with equivalent legacy, JSON, and YAML fixtures covering multi-host HTTP, HTTPS, ICMP, multiple systems, optional empty group, and failure-grace behaviour. Added `tests/fixtures/legacy-edge-cases/` to exercise legacy duplicate rows, invalid rows, unknown groups, and invalid HTTP URL warnings without using real-world configs.

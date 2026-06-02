@@ -1,0 +1,48 @@
+runtime:
+  var_dir: ./var/manuheart
+  log_file: ./var/manuheart.log
+  log_level: 3
+  check_period: 3
+  run_mode: once
+  status_files:
+    hosts: ./var/manuheart/status/hoststatus
+    groups: ./var/manuheart/status/groupstatus
+    systems: ./var/manuheart/status/sysstatus
+groups:
+  - name: frontend-http
+    system: synthetic-web
+    critical: true
+    type: http
+    min_count: 2
+    failure_grace: 1
+  - name: api-https
+    system: synthetic-web
+    critical: true
+    type: https
+    min_count: 1
+    failure_grace: 2
+  - name: optional-workers
+    system: synthetic-web
+    critical: false
+    type: icmp
+    min_count: 0
+    failure_grace: -1
+  - name: batch-icmp
+    system: synthetic-batch
+    critical: true
+    type: icmp
+    min_count: 1
+    failure_grace: 1
+hosts:
+  - name: frontend-a
+    group: frontend-http
+    url: http://frontend-a.example.test/health
+  - name: frontend-b
+    group: frontend-http
+    url: http://frontend-b.example.test/health
+  - name: api-a
+    group: api-https
+    url: https://api-a.example.test/ready
+  - name: batch-a
+    group: batch-icmp
+    url: n/a
