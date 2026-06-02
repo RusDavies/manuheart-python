@@ -11,12 +11,13 @@ Manuheart Python should initially be boring in the best possible way: read confi
 
 ## Recommended design posture
 
-Build this as a small Python package with a CLI, not as a web app and not as a daemon-first service.
+Build this as a reusable Python library with a CLI on top, not as a CLI that happens to have importable files. The CLI is an adapter; the library API is the product core.
 
 Recommended defaults:
 
 - Python 3.11+.
 - Source layout under `src/manuheart/`.
+- A stable, documented public library API exposed from `manuheart` and/or `manuheart.api`.
 - `pyproject.toml` packaging.
 - `pytest` tests.
 - `ruff` for lint/format.
@@ -27,7 +28,10 @@ Recommended defaults:
 ## Architecture overview
 
 ```text
-CLI
+CLI adapter
+ │
+ ▼
+Public library API
  │
  ▼
 Application service / runner
@@ -77,6 +81,7 @@ manuheart-python/
 │   └── manuheart/
 │       ├── __init__.py
 │       ├── __main__.py
+│       ├── api.py
 │       ├── cli.py
 │       ├── app.py
 │       ├── config.py
@@ -97,6 +102,66 @@ manuheart-python/
 ```
 
 ### Module responsibilities
+
+#### `api.py`
+
+Defines the public reusable library API. This should be the stable surface that other Python code can import without knowing or caring about CLI parsing, terminal output, process exit codes, or argparse/click details.
+
+The API should be small, explicit, and versioned by behaviour rather than vibes. Initial public functions/classes should be enough to support the CLI and downstream library users without exposing internal implementation clutter.
+
+Recommended initial API shape:
+
+```python
+from pathlib import Path
+from manuheart.api import (
+    CheckRunResult,
+    ConfigFormat,
+    LoadedConfiguration,
+    load_config,
+    run_check,
+    run_check_from_config,
+    validate_config,
+)
+
+loaded = load_config(Path("manuheart.yaml"), config_format=ConfigFormat.AUTO)
+result = run_check(loaded)
+```
+
+Candidate public API:
+
+- `load_config(path, *, config_format=ConfigFormat.AUTO, overrides=None) -> LoadedConfiguration`
+- `validate_config(path, *, config_format=ConfigFormat.AUTO, overrides=None) -> ValidationResult`
+- `run_check(config: LoadedConfiguration, *, checkers=None, clock=None) -> CheckRunResult`
+- `run_check_from_config(path, *, config_format=ConfigFormat.AUTO, overrides=None) -> CheckRunResult`
+- `write_reports(result: CheckRunResult, destinations: ReportDestinations) -> None`
+
+Public API model exports:
+
+- `ConfigFormat`
+- `CheckType`
+- `Status`
+- `HostDefinition`
+- `GroupDefinition`
+- `HostState`
+- `GroupState`
+- `SystemState`
+- `CheckResult`
+- `LoadedConfiguration`
+- `CheckRunResult`
+- `ValidationResult`
+- `ReportDestinations`
+
+API design rules:
+
+- no CLI-only concepts in public API return values;
+- no direct printing from library functions;
+- no `sys.exit()` from library code;
+- return structured warnings/errors where practical;
+- raise typed exceptions only for boundary failures that callers cannot reasonably ignore;
+- allow dependency injection for checkers and clock;
+- keep internal modules importable but not part of the supported API contract unless exported deliberately.
+
+The CLI should be implemented by calling this API. If a feature cannot be used through the API, it should not be considered properly implemented.
 
 #### `cli.py`
 
@@ -121,7 +186,7 @@ manuheart --once --config ...
 manuheart --daemon --config ...
 ```
 
-Do not put business logic in CLI handlers. Parse arguments, build an application config, call `app.run_once()` or `app.run_daemon()`.
+Do not put business logic in CLI handlers. Parse arguments, call the public library API, render output, and translate API results into process exit codes. The CLI should use the same API that a Python caller would use.
 
 #### `models.py`
 
@@ -300,7 +365,7 @@ def run_once(cli_options) -> RunResult:
     return result
 ```
 
-`run_daemon()` should just sleep and repeatedly call `run_once()` with signal-aware shutdown.
+`run_daemon()` should just sleep and repeatedly call the same API-backed one-shot runner with signal-aware shutdown.
 
 ## Compatibility strategy
 
@@ -337,7 +402,8 @@ Internally, Python should use:
 - exceptions only at boundaries;
 - warnings collection instead of scattered shell output;
 - deterministic ordering;
-- dependency injection for checkers and clock.
+- dependency injection for checkers and clock;
+- a documented reusable library API with the CLI implemented as a thin adapter over it.
 
 ### Defer unless needed
 
@@ -355,20 +421,22 @@ Those may become good ideas later. Right now they are how small tools wake up ow
 
 ## Proposed implementation phases
 
-### Phase 1: Project skeleton and compatibility fixtures
+### Phase 1: Project skeleton, public API shell, and compatibility fixtures
 
 Deliverables:
 
 - `pyproject.toml`;
 - `src/manuheart/` package;
+- `src/manuheart/api.py` with initial public API placeholders and exported models once available;
 - `pytest` setup;
 - copy/sample `examples/localhost` fixtures;
 - tests that parse Bash sample groups/hosts/config.
 
 Gate:
 
-- `python -m pytest` passes.
-- `python -m manuheart --help` works.
+- `python -m pytest` passes;
+- `python -m manuheart --help` works;
+- a smoke import such as `python -c "import manuheart; import manuheart.api"` works.
 
 ### Phase 2: Config parser and domain models
 
@@ -419,7 +487,7 @@ Gate:
 - localhost smoke test writes parseable `hoststatus`, `groupstatus`, `sysstatus`.
 - tests mock network behavior; smoke can use localhost only.
 
-### Phase 5: CLI, daemon loop, and docs
+### Phase 5: API-backed CLI, daemon loop, and docs
 
 Deliverables:
 
@@ -432,7 +500,8 @@ Deliverables:
 
 Gate:
 
-- CLI tests pass.
+- CLI tests prove commands call API-level functions rather than duplicating business logic.
+- public API smoke tests pass.
 - one-shot smoke passes.
 - daemon loop has a bounded test with fake sleep/checker or is manually smoke-tested with a short interval.
 
