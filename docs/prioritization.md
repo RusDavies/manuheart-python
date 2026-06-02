@@ -67,3 +67,9 @@ Russ confirmed status values should remain enum-like strings:
 - `"unknown"`
 
 Implication: clean typed output should convert numeric and boolean fields to JSON numbers/booleans where practical, but status remains a human-readable string value.
+
+## Timestamp value decision
+
+Russ confirmed timestamp fields such as `lastUp` and `lastChecked` should remain strings, but should be consistently ISO-8601.
+
+Implication: clean typed output should keep timestamps human-readable and JSON-native while avoiding inconsistent legacy timestamp formats where possible.
