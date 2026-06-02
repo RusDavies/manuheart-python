@@ -90,3 +90,8 @@
 - [x] Bound and normalize checker detail text before storing it in host reports.
 - [x] Add report-set metadata with matching `run_id` and `generated_at` across host/group/system reports.
 - [x] Add public API support for injected previous state or intentionally skipping disk previous-state loading.
+
+## Release readiness
+
+- [x] Add internal `v0.1.0` changelog/release notes.
+- [x] Confirm release-readiness gate includes lint, typecheck, tests, compatibility, dependency audit, public smoke validate/check, and clean install smoke.
