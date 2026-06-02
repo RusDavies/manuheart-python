@@ -19,7 +19,9 @@ Initial architecture proposal:
 - understand/preserve the Bash health model and report contract;
 - default to one-shot execution;
 - use typed Python domain models instead of shell-global associative arrays and delimiter serialization;
-- keep parsing, health rollup, checking, state, reporting, and CLI concerns separate;
+- expose most functionality through a reusable, well-defined Python library API;
+- implement the CLI as a thin adapter over that API;
+- keep parsing, health rollup, checking, state, reporting, API, and CLI concerns separate;
 - preserve compatible legacy config and JSON outputs first;
 - add first-class JSON/YAML configuration options that normalize into the same domain model.
 

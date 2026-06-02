@@ -25,6 +25,8 @@
 - [x] Understand the original Bash implementation and document its behavior.
 - [x] Propose a clean Python architecture for the rewrite.
 - [ ] Create Python project skeleton with `pyproject.toml`, `src/manuheart/`, and `tests/`.
+- [ ] Define the initial public library API contract in `src/manuheart/api.py`.
+- [ ] Add API smoke tests proving the package and public API import cleanly.
 - [ ] Port sample localhost config fixtures from `manuheart-bash`.
 - [ ] Implement typed domain models for hosts, groups, systems, statuses, and checks.
 - [ ] Implement compatible legacy config, group, and host parsers.
@@ -34,6 +36,7 @@
 - [ ] Implement pure health rollup logic with fake-checker tests.
 - [ ] Implement real ICMP and HTTP(S) checkers.
 - [ ] Implement previous-state loading and atomic JSON report writing.
-- [ ] Implement CLI commands and compatibility flags.
+- [ ] Implement CLI commands and compatibility flags as thin adapters over the public API.
+- [ ] Add tests proving CLI behavior matches API behavior for equivalent inputs.
 - [ ] Add smoke test for one-shot localhost run.
 - [ ] Add daemon mode only after one-shot mode is solid.
