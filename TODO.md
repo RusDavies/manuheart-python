@@ -72,4 +72,4 @@
 - [x] Improve daemon observability and graceful shutdown behaviour.
 - [x] Reuse or inject HTTP clients for efficiency and cleaner checker tests.
 - [x] Add static typing gate and package typing marker (`py.typed`).
-- [ ] Add dependency/security review gate before release.
+- [x] Add dependency/security review gate before release.

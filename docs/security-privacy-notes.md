@@ -29,3 +29,11 @@ Manuheart configuration and reports may contain internal hostnames, IP addresses
 - YAML support uses optional `PyYAML`.
 
 Dependencies should be reviewed during release readiness because tiny internal tools still deserve not to become dependency confetti cannons.
+
+Release-readiness dependency gate:
+
+```bash
+.venv/bin/python scripts/check_dependency_security.py
+```
+
+The script audits the releasable dependency set from `pyproject.toml`: normal runtime dependencies plus the optional YAML runtime extra. It intentionally excludes development tooling and the local unpublished package itself.
