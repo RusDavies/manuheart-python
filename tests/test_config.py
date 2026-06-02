@@ -140,6 +140,56 @@ def test_structured_config_loads_http_method_settings(tmp_path):
     assert loaded.effective.http.fallback_to_get is False
 
 
+def test_structured_status_files_are_relative_to_var_dir(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "runtime": {
+                    "var_dir": "runtime-var",
+                    "status_files": {
+                        "hosts": "custom/hoststatus",
+                        "groups": "custom/groupstatus",
+                        "systems": "custom/sysstatus",
+                    },
+                },
+                "groups": [],
+                "hosts": [],
+            }
+        )
+    )
+
+    loaded = load_config(config)
+
+    assert loaded.effective.var_dir == tmp_path / "runtime-var"
+    assert loaded.effective.reports.hosts == tmp_path / "runtime-var/custom/hoststatus"
+    assert loaded.effective.reports.groups == tmp_path / "runtime-var/custom/groupstatus"
+    assert loaded.effective.reports.systems == tmp_path / "runtime-var/custom/sysstatus"
+
+
+def test_structured_status_files_can_be_absolute(tmp_path):
+    hoststatus = tmp_path / "absolute-hoststatus"
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "runtime": {
+                    "var_dir": "runtime-var",
+                    "status_files": {"hosts": str(hoststatus)},
+                },
+                "groups": [],
+                "hosts": [],
+            }
+        )
+    )
+
+    loaded = load_config(config)
+
+    assert loaded.effective.reports.hosts == hoststatus
+    assert loaded.effective.reports.groups == tmp_path / "runtime-var/status/groupstatus"
+    assert loaded.effective.reports.systems == tmp_path / "runtime-var/status/sysstatus"
+
+
 def test_structured_config_rejects_unknown_http_method(tmp_path):
     config = tmp_path / "bad.json"
     config.write_text('{"checks": {"http": {"method": "POST"}}, "groups": [], "hosts": []}')

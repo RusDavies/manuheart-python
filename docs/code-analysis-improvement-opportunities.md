@@ -63,13 +63,11 @@ Impact: operators may not know Manuheart ignored corrupt prior state, which affe
 
 Suggested fix: return state-load warnings, or add a small state-loading result object, and include warnings in `CheckRunResult.warnings` / CLI stderr.
 
-### 5. Clarify or adjust relative path semantics for status files
+### 5. Status-file path semantics resolved
 
-`var_dir` is resolved relative to the config file directory. Explicit `runtime.status_files.*` paths are also resolved relative to the config file directory, not relative to `var_dir`.
+Decision implemented: `runtime.var_dir` is resolved relative to the config file directory, while relative `runtime.status_files.*` paths resolve under `var_dir`. Absolute status-file paths remain absolute. Omitted status files default to `var_dir/status/{hoststatus,groupstatus,sysstatus}`.
 
-Impact: defensible, but easy to misread. Operators may expect status files inside `var_dir` unless absolute.
-
-Suggested fix: either document this explicitly in config docs/examples, or change explicit relative status file paths to resolve relative to `var_dir`. If changing behaviour, add tests and migration notes.
+This keeps runtime outputs under the runtime directory by default instead of scattering reports next to the config file.
 
 ### 6. Tighten public API typing around extension points
 
@@ -101,7 +99,6 @@ Suggested fix: defer until needed, then add bounded concurrency with determinist
 2. Add stricter config unknown-key and numeric-bound validation.
 3. Catch per-host checker crashes.
 4. Surface previous-state/report read warnings.
-5. Clarify status-file path semantics.
-6. Tighten API typing.
-7. Add checker details to reports if operators need them.
-8. Add bounded concurrency only after scale justifies it.
+5. Tighten API typing.
+6. Add checker details to reports if operators need them.
+7. Add bounded concurrency only after scale justifies it.

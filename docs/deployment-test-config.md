@@ -26,10 +26,10 @@ Run it manually from the project root:
 .venv/bin/python -m manuheart check --config examples/deployment-test/public-smoke.json
 ```
 
-Reports are written under the config directory:
+Reports are written under the config's `var_dir`. Because the smoke config uses the default `var_dir`, relative report paths resolve under:
 
 ```bash
-examples/deployment-test/tmp/public-smoke-reports/
+examples/deployment-test/var/manuheart/tmp/public-smoke-reports/
 ```
 
 ## Why public servers are acceptable here
@@ -64,6 +64,7 @@ Recommended production-ish shape:
 - `critical: true` only for groups that should make the system fail;
 - `min_count` set to the smallest healthy quorum;
 - `failure_grace` set high enough to avoid one transient packet/web blip turning into noise;
-- `report_dir` pointed at the compatibility report directory expected by downstream consumers.
+- `runtime.var_dir` pointed at the intended runtime directory;
+- `runtime.status_files` paths omitted for defaults, absolute when needed, or relative to `var_dir`.
 
 Do not commit real hostnames, service names, generated reports, or topology-bearing configs to the repository.

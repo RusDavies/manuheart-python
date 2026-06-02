@@ -9,6 +9,7 @@ Status: Draft.
 - Reject unsupported config formats clearly.
 - Reject unknown JSON/YAML config keys clearly.
 - Validate numeric bounds for runtime/check/group settings.
+- Resolve relative `runtime.status_files.*` paths under `runtime.var_dir`.
 - Apply CLI/API overrides with precedence over config-file values.
 - Run ICMP checks using a Python ICMP library.
 - Run HTTP/S checks using a Python HTTP client library.
@@ -29,6 +30,7 @@ Status: Draft.
 - JSON and YAML fixtures normalize to equivalent host/group definitions.
 - Unsupported legacy-style config filenames fail with clear errors.
 - Unknown JSON/YAML keys and invalid numeric bounds fail with clear `ConfigError`s.
+- Relative status-file paths are covered by tests and resolve under `var_dir`.
 - CLI/API override precedence is covered by tests.
 - Fake-checker tests cover up/down/unknown rollup behaviour, including host grace and critical-group unknown propagation.
 - Checker implementation tests mock `icmplib` and `httpx` rather than depending on external network state.

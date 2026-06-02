@@ -222,9 +222,9 @@ runtime:
   var_dir: ./var/manuheart
   check_period: 30
   status_files:
-    hosts: ./var/manuheart/status/hoststatus
-    groups: ./var/manuheart/status/groupstatus
-    systems: ./var/manuheart/status/sysstatus
+    hosts: status/hoststatus
+    groups: status/groupstatus
+    systems: status/sysstatus
 checks:
   http:
     connect_timeout: 3
