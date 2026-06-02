@@ -34,6 +34,7 @@
 - [x] Implement optional YAML configuration parser, preferably behind a `yaml` package extra.
 - [x] Add equivalence tests proving legacy, JSON, and YAML config can describe the same health model.
 - [x] Implement pure health rollup logic with fake-checker tests.
+- [ ] Implement CLI/API override application for config values and add precedence tests.
 - [ ] Implement real ICMP and HTTP(S) checkers.
 - [ ] Implement previous-state loading and atomic JSON report writing.
 - [ ] Implement CLI commands and compatibility flags as thin adapters over the public API.
