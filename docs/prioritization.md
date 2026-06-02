@@ -34,4 +34,10 @@ Implication: compatibility work should expand the synthetic fixture suite to cov
 
 Russ decided to prioritize **exact Bash-output matching first** over broadening the synthetic fixture set.
 
-Implication: the next compatibility work should tighten the localhost Bash-vs-Python comparison from shape/name checks toward exact report-field compatibility, then document any intentional or unavoidable differences before adding broader synthetic scenarios.
+Implication: the next compatibility work should compare localhost Bash-vs-Python output closely enough to identify migration-relevant differences, while allowing cleaner Python defaults. Any intentional differences should be documented before adding broader synthetic scenarios.
+
+## Output-format decision
+
+Russ decided to **go cleaner from the get-go**.
+
+Implication: Bash output should be used as a compatibility reference, but Python does not need to preserve ugly legacy output details as the default. The default Python report format should prefer clean typed JSON where practical. If strict legacy report compatibility is needed later, add it as an explicit compatibility mode rather than making all users inherit Bash-shaped scars.
