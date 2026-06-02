@@ -11,3 +11,4 @@ examples/deployment-test/tmp/
 examples/deployment-test/var/
 examples/localhost/var/
 examples/synthetic-compat/var/
+/.openclaw-security-audit/
