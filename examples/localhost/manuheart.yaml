@@ -1,0 +1,27 @@
+runtime:
+  var_dir: ./var/manuheart
+  log_file: ./var/manuheart.log
+  log_level: 3
+  check_period: 3
+  run_mode: once
+  status_files:
+    hosts: ./var/manuheart/status/hoststatus
+    groups: ./var/manuheart/status/groupstatus
+    systems: ./var/manuheart/status/sysstatus
+groups:
+  - name: localhost-icmp
+    system: localhost-system
+    critical: true
+    type: icmp
+    min_count: 1
+    failure_grace: 1
+  - name: optional-example
+    system: localhost-system
+    critical: false
+    type: icmp
+    min_count: 0
+    failure_grace: -1
+hosts:
+  - name: 127.0.0.1
+    group: localhost-icmp
+    url: n/a
