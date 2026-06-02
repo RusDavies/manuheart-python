@@ -31,6 +31,8 @@ class Status(StrEnum):
 class HttpCheckSettings:
     connect_timeout: float = 3.0
     max_time: float = 5.0
+    method: str = "HEAD"
+    fallback_to_get: bool = True
 
 
 @dataclass(frozen=True, slots=True)

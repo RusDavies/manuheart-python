@@ -104,3 +104,14 @@ Pre-merge gate on branch `structured-config-validation`:
 - `scripts/check_clean_install.py`: passed.
 
 Structured JSON/YAML config loading now validates top-level object shape, `groups`/`hosts` list shape, group/host item object shape, required fields with path-specific messages, unsupported group check types, HTTP/HTTPS host URL schemes, runtime/checks/status_files section shapes, numeric check settings, malformed JSON, and malformed YAML. Errors are raised as `ConfigError` instead of raw parser/type/key exceptions.
+
+## Evidence for HTTP method and GET fallback hardening
+
+Pre-merge gate on branch `http-method-fallback`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 41 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed.
+
+HTTP checks now support structured config fields `checks.http.method` (`HEAD` or `GET`) and `checks.http.fallback_to_get` (boolean). The default remains `HEAD` with GET fallback enabled for servers that return method-not-allowed or not-implemented for HEAD.

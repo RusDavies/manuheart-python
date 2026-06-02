@@ -26,6 +26,23 @@ Validate config without running checks:
 .venv/bin/python -m manuheart validate-config --config examples/localhost/manuheart.json
 ```
 
+Structured JSON/YAML configs can tune HTTP checks under `checks.http`:
+
+```json
+{
+  "checks": {
+    "http": {
+      "method": "HEAD",
+      "fallback_to_get": true,
+      "connect_timeout": 3,
+      "max_time": 5
+    }
+  }
+}
+```
+
+`method` may be `HEAD` or `GET`. The default remains `HEAD`, with safe `GET` fallback enabled for servers that reject or do not implement `HEAD`.
+
 Compatibility-style legacy invocation:
 
 ```bash

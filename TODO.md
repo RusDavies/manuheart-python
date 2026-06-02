@@ -67,7 +67,7 @@
 
 - [x] Harden previous-state loading against malformed report values.
 - [x] Add stricter structured JSON/YAML config validation and clearer `ConfigError` messages.
-- [ ] Make HTTP checking less HEAD-only, via configurable method or safe GET fallback.
+- [x] Make HTTP checking less HEAD-only, via configurable method or safe GET fallback.
 - [ ] Improve CLI error handling for `check` and `daemon` operational failures.
 - [ ] Improve daemon observability and graceful shutdown behaviour.
 - [ ] Reuse or inject HTTP clients for efficiency and cleaner checker tests.

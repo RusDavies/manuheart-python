@@ -140,3 +140,31 @@ def test_structured_yaml_parse_errors_are_config_errors(tmp_path):
     config.write_text("groups: [")
     with pytest.raises(ConfigError, match="invalid YAML config"):
         load_config(config)
+
+
+def test_structured_config_loads_http_method_settings(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text(
+        """
+        {
+          "checks": {
+            "http": {
+              "method": "get",
+              "fallback_to_get": false
+            }
+          },
+          "groups": [],
+          "hosts": []
+        }
+        """
+    )
+    loaded = load_config(config)
+    assert loaded.effective.http.method == "GET"
+    assert loaded.effective.http.fallback_to_get is False
+
+
+def test_structured_config_rejects_unknown_http_method(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text('{"checks": {"http": {"method": "POST"}}, "groups": [], "hosts": []}')
+    with pytest.raises(ConfigError, match="checks.http.method must be HEAD or GET"):
+        load_config(config)
