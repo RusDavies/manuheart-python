@@ -9,3 +9,20 @@ Purpose: track Manuheart Python work, notes, and backlog for this channel.
 Target class: **Class 2 — Small Internal Tool**.
 
 This project follows the workspace Software Product Development Process. See `docs/product-process-classification.md` for the tailoring notes, required lightweight artifacts, and approval boundaries.
+
+## Rewrite direction
+
+The goal is to recreate the original Bash Manuheart health checker from `../manuheart-bash` as a clean Python internal tool.
+
+Initial architecture proposal:
+
+- understand/preserve the Bash health model and report contract;
+- default to one-shot execution;
+- use typed Python domain models instead of shell-global associative arrays and delimiter serialization;
+- keep parsing, health rollup, checking, state, reporting, and CLI concerns separate;
+- preserve compatible config and JSON outputs first, then improve deliberately.
+
+See:
+
+- `docs/bash-implementation-understanding.md`
+- `docs/python-architecture-proposal.md`
