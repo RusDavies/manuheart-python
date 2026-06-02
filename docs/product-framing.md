@@ -18,8 +18,8 @@ Create Manuheart Python as a reusable Python health-checking library with a well
 
 ## Success criteria
 
-- JSON and YAML config can describe the health model cleanly for new use.
-- Existing legacy config can be loaded as an import/convenience path if old files appear later.
+- JSON and YAML config can describe the health model cleanly.
+- Legacy Bash config input is not part of the supported product surface.
 - Library callers can use the public API without invoking the CLI.
 - CLI behaviour is implemented through the public API.
 - Health rollup semantics are documented and tested.

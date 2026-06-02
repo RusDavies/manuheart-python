@@ -9,7 +9,6 @@ Russ clarified that Manuheart Python does **not** need to be a drop-in replaceme
 The Bash implementation remains useful reference material for:
 
 - the host/group/system health model;
-- legacy config import support;
 - rollup semantics worth preserving;
 - migration-risk checks for anyone who does have old files later.
 
@@ -19,23 +18,35 @@ It is no longer the primary product constraint.
 
 1. Keep the Python library/API clean, typed, and reusable.
 2. Keep the CLI as a thin adapter over the public API.
-3. Prefer first-class JSON/YAML configuration for new use.
-4. Keep legacy config loading as an import/convenience path, not the default product identity.
-5. Preserve useful report continuity where cheap, but do not contort the implementation for exact Bash-shaped output.
+3. Support JSON/YAML configuration only.
+4. Preserve useful report continuity where cheap, but do not contort the implementation for exact Bash-shaped output.
 6. Keep the release posture internal/private unless Russ explicitly approves wider publication.
 7. Use public-smoke or approved internal configs for deployment validation.
 
 ## Current recommendation
 
-Treat the current project as a working internal-tool product that is ready for controlled deployment testing, not as a production replacement exercise. The next useful proof is running it in a real target environment with either the public smoke config or an approved internal config, then deciding whether any operational polish is needed.
+Treat the current project as a working internal-tool product that is ready for controlled deployment testing, not as a production replacement exercise. The next useful proof is running it in a real target environment with either the public smoke config or an approved internal JSON/YAML config, then deciding whether any operational polish is needed.
 
 Release posture is documented in `docs/release-posture.md`: private/internal by default, no public publishing, and no deployment against real monitored hosts without explicit approval.
 
+## Config-format decision
+
+Decision: remove legacy Bash config input from the Python product surface.
+
+Rationale:
+
+- there are no known Bash installations to migrate;
+- JSON/YAML are cleaner and already first-class;
+- legacy parsing added code, tests, docs, and edge cases for a user we do not have;
+- keeping it made the project feel like a replacement effort instead of a good implementation.
+
+Implication: use JSON/YAML for all supported configs. Keep the Bash implementation notes only as historical reference.
+
 ## Fixture-source decision
 
-Russ decided to continue with **synthetic compatibility fixtures only** for now. Real-world Manuheart Bash configs should not be used unless separately approved and sanitized.
+Russ decided to continue with **synthetic fixtures only** for now. Real-world Manuheart configs should not be used unless separately approved and sanitized.
 
-Implication: the existing synthetic fixtures are enough for regression coverage and historical-reference checks. Future fixture work should focus on realistic new-product scenarios unless real legacy configs are explicitly approved.
+Implication: future fixture work should focus on realistic new-product scenarios unless real configs are explicitly approved.
 
 ## Compatibility depth decision
 

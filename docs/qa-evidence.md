@@ -52,7 +52,7 @@ Pre-merge gate on branch `add-synthetic-compat-fixtures`:
 - `pytest`: 28 passed.
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
 
-Added `examples/synthetic-compat/` with equivalent legacy, JSON, and YAML fixtures covering multi-host HTTP, HTTPS, ICMP, multiple systems, optional empty group, and failure-grace behaviour. Added `tests/fixtures/legacy-edge-cases/` to exercise legacy duplicate rows, invalid rows, unknown groups, and invalid HTTP URL warnings without using real-world configs.
+Added `examples/synthetic-compat/` with equivalent JSON and YAML fixtures covering multi-host HTTP, HTTPS, ICMP, multiple systems, optional empty group, and failure-grace behaviour. Legacy edge-case fixtures were later removed when legacy Bash config input was dropped from the product surface.
 
 ## Evidence for real-world fixture intake guardrail
 
@@ -216,3 +216,18 @@ Pre-merge gate on branch `reframe-away-from-drop-in-replacement`:
 - `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
 
 Updated product framing, scope, requirements, prioritization, release posture, fixture intake, and architecture notes to reflect Russ's decision that Manuheart Python does not need to be a drop-in Bash replacement because there are no existing Bash installations to replace. Bash compatibility is now treated as historical reference/regression evidence, while the main goal is a clean internal Python health-checking implementation.
+
+## Evidence for removing legacy Bash config input
+
+Pre-merge gate on branch `remove-legacy-config-format`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 43 passed.
+- `scripts/check_localhost_compatibility.py`: passed; Python side uses JSON config while Bash side remains a historical reference comparison.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed.
+
+Removed legacy Bash `.conf` plus pipe-delimited `groups`/`hosts` config loading from the Python product surface. JSON and YAML are now the only supported config formats. Removed compatibility root flags `--once`/`--daemon` and legacy host/group file overrides from the CLI. Kept previous-state legacy report-field tolerance because it is isolated report robustness, not config-format support.
