@@ -50,6 +50,7 @@ def test_write_reports_default_to_clean_typed_records(tmp_path):
     assert host["last_up"] == "2026-06-02T00:00:00Z"
     assert host["last_checked"] == "2026-06-02T00:00:00Z"
     assert isinstance(host["fail_count"], int)
+    assert host["detail"] == "fake"
     assert "lastUp" not in host
     assert "failCount" not in host
 
@@ -86,6 +87,7 @@ def test_previous_state_loads_clean_and_legacy_report_fields(tmp_path):
                         "last_checked": "t2",
                         "fail_count": 3,
                         "status": "down",
+                        "detail": "http status 503",
                     },
                     {
                         "name": "legacy",
@@ -160,7 +162,9 @@ def test_previous_state_loads_clean_and_legacy_report_fields(tmp_path):
     systems = load_previous_systems(loaded.effective)
 
     assert hosts["g/clean"].fail_count == 3
+    assert hosts["g/clean"].detail == "http status 503"
     assert hosts["g/legacy"].fail_count == 4
+    assert hosts["g/legacy"].detail == ""
     assert groups["clean-group"].critical is True
     assert groups["legacy-group"].failure_grace == 3
     assert systems["clean-system"].failure_count == 5

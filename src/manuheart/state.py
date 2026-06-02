@@ -137,6 +137,7 @@ def _load_previous_hosts(config: EffectiveConfig, warnings: list[str]) -> dict[s
                 warnings=warnings,
                 context=f"{context}.status",
             ),
+            detail=_safe_str(item.get("detail"), ""),
         )
         if state.name and state.group:
             result[state.key] = state

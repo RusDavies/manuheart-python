@@ -34,6 +34,7 @@ def hosts_payload(result: CheckRunResult) -> dict:
                 "last_checked": state.last_checked,
                 "fail_count": state.fail_count,
                 "status": state.status.value,
+                "detail": state.detail,
             }
             for state in result.hosts.values()
         ]

@@ -45,6 +45,7 @@ def update_host_state(
             last_checked=now,
             fail_count=0,
             status=Status.UP,
+            detail=result.detail,
         )
 
     fail_count = base.fail_count + 1
@@ -61,6 +62,7 @@ def update_host_state(
         last_checked=now,
         fail_count=fail_count,
         status=status,
+        detail=result.detail,
     )
 
 

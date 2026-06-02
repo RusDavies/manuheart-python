@@ -19,6 +19,7 @@ Status: Draft.
 - Preserve critical-group system rollup semantics: critical `down` groups make systems `down`, and critical `unknown` groups make systems `unknown`.
 - Load previous status from clean or legacy-shaped JSON reports where available.
 - Write host, group, and system status reports atomically as clean typed JSON.
+- Include checker diagnostic detail text in host status records.
 - Expose a reusable public Python API.
 - Provide CLI commands as adapters over the public API.
 - Expose typed public extension points for checker maps, clock sources, daemon sleepers, daemon event callbacks, and config overrides.
@@ -34,6 +35,7 @@ Status: Draft.
 - Relative status-file paths are covered by tests and resolve under `var_dir`.
 - CLI/API override precedence is covered by tests.
 - Public API extension-point signatures are covered by type-hint regression tests.
+- Host report tests prove checker detail text is serialized and previous-state loading tolerates missing details.
 - Fake-checker tests cover up/down/unknown rollup behaviour, including host grace and critical-group unknown propagation.
 - Checker implementation tests mock `icmplib` and `httpx` rather than depending on external network state.
 - One-shot localhost smoke test writes parseable JSON reports.
