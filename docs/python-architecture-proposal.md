@@ -222,7 +222,7 @@ It should return an explicit `EffectiveConfig` plus parsed definitions and a lis
 Recommended design:
 
 - `ConfigLoader` interface that returns one normalized `LoadedConfiguration` model.
-- `LegacyConfigLoader` for drop-in compatibility with `manuheart.conf` + separate `groups`/`hosts` files.
+- `LegacyConfigLoader` for importing/reading `manuheart.conf` + separate `groups`/`hosts` files.
 - `JsonConfigLoader` for a single structured JSON file.
 - `YamlConfigLoader` for a single structured YAML file.
 - Shared validation/normalization after format-specific parsing so all formats feed the same domain models.
