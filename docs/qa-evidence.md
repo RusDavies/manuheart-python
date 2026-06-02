@@ -115,3 +115,14 @@ Pre-merge gate on branch `http-method-fallback`:
 - `scripts/check_clean_install.py`: passed.
 
 HTTP checks now support structured config fields `checks.http.method` (`HEAD` or `GET`) and `checks.http.fallback_to_get` (boolean). The default remains `HEAD` with GET fallback enabled for servers that return method-not-allowed or not-implemented for HEAD.
+
+## Evidence for CLI operational error handling
+
+Pre-merge gate on branch `cli-error-handling`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 43 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed.
+
+The `check` and `daemon` CLI commands now catch operational failures at the adapter boundary, print concise `ERROR: ...` messages to stderr, and exit `1` instead of leaking Python tracebacks. Added subprocess tests for report-write failure and daemon config-load failure.
