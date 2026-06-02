@@ -145,14 +145,26 @@ def run_health_cycle(
     now = _now(clock)
     checker_map = checkers or default_checkers(config.effective)
     host_states: dict[str, HostState] = {}
-    for key in sorted(config.hosts):
-        host = config.hosts[key]
-        group = config.groups[host.group]
-        checker = checker_map[group.check_type]
-        check_result = checker.check(host, group)
-        host_states[key] = update_host_state(
-            (previous_hosts or {}).get(key), host, group, check_result, now
-        )
+    try:
+        for key in sorted(config.hosts):
+            host = config.hosts[key]
+            group = config.groups[host.group]
+            checker = checker_map[group.check_type]
+            check_result = checker.check(host, group)
+            host_states[key] = update_host_state(
+                (previous_hosts or {}).get(key), host, group, check_result, now
+            )
+    finally:
+        if checkers is None:
+            seen: set[int] = set()
+            for checker in checker_map.values():
+                checker_id = id(checker)
+                if checker_id in seen:
+                    continue
+                seen.add(checker_id)
+                close = getattr(checker, "close", None)
+                if close is not None:
+                    close()
     group_states = rollup_groups(config.groups, host_states, previous_groups, now)
     system_states = rollup_systems(group_states, previous_systems, now)
     return CheckRunResult(

@@ -71,6 +71,26 @@ def test_http_checker_uses_httpx_mock_transport():
     assert result.healthy is True
 
 
+def test_http_checker_accepts_injected_client():
+    calls = []
+
+    class FakeResponse:
+        status_code = 204
+
+    class FakeClient:
+        def request(self, method, url):
+            calls.append((method, url))
+            return FakeResponse()
+
+    result = HttpChecker(EffectiveConfig(), client=FakeClient()).check(
+        HostDefinition("example", "g", "https://example.test/health"),
+        group(CheckType.HTTPS),
+    )
+
+    assert result.healthy is True
+    assert calls == [("HEAD", "https://example.test/health")]
+
+
 def test_http_checker_can_use_configured_get_method():
     def handler(request):
         assert request.method == "GET"
@@ -123,8 +143,7 @@ def test_http_checker_falls_back_to_get_when_head_is_not_supported(monkeypatch):
             calls.append(("GET", url))
             return FakeResponse(200)
 
-    monkeypatch.setattr("manuheart.checkers.httpx.Client", FakeClient)
-    result = HttpChecker(EffectiveConfig()).check(
+    result = HttpChecker(EffectiveConfig(), client=FakeClient()).check(
         HostDefinition("example", "g", "https://example.test/health"),
         group(CheckType.HTTPS),
     )
@@ -153,8 +172,7 @@ def test_http_checker_rejects_non_2xx(monkeypatch):
         def request(self, method, url):
             return FakeResponse()
 
-    monkeypatch.setattr("manuheart.checkers.httpx.Client", FakeClient)
-    result = HttpChecker(EffectiveConfig()).check(
+    result = HttpChecker(EffectiveConfig(), client=FakeClient()).check(
         HostDefinition("example", "g", "https://example.test/health"),
         group(CheckType.HTTPS),
     )

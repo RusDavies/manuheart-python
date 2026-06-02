@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Any
 
 import httpx
 from icmplib import ping
@@ -12,6 +13,13 @@ from manuheart.models import CheckResult, EffectiveConfig, GroupDefinition, Host
 
 _HOST_RE = re.compile(r"^[A-Za-z0-9_.:-]+$")
 _HEAD_FALLBACK_STATUS_CODES = {405, 501}
+
+
+def _http_timeout(config: EffectiveConfig) -> httpx.Timeout:
+    return httpx.Timeout(
+        timeout=config.http.max_time,
+        connect=config.http.connect_timeout,
+    )
 
 
 @dataclass(slots=True)
@@ -41,37 +49,45 @@ class HttpChecker:
     """HTTP(S) checker backed by httpx."""
 
     config: EffectiveConfig
+    client: Any | None = None
+    close_client: bool = False
+
+    def close(self) -> None:
+        if self.close_client and self.client is not None and hasattr(self.client, "close"):
+            self.client.close()
+
+    def _check_with_client(self, client: Any, host: HostDefinition) -> CheckResult:
+        method = self.config.http.method.upper()
+        if method not in {"HEAD", "GET"}:
+            return CheckResult(False, f"invalid http method {method!r}")
+        response = client.request(method, host.url)
+        if (
+            method == "HEAD"
+            and self.config.http.fallback_to_get
+            and response.status_code in _HEAD_FALLBACK_STATUS_CODES
+        ):
+            response = client.get(host.url)
+        return CheckResult(
+            200 <= response.status_code <= 299, f"http status {response.status_code}"
+        )
 
     def check(self, host: HostDefinition, group: GroupDefinition) -> CheckResult:
         _ = group
         if not host.url.startswith(("http://", "https://")):
             return CheckResult(False, "invalid url")
-        timeout = httpx.Timeout(
-            timeout=self.config.http.max_time,
-            connect=self.config.http.connect_timeout,
-        )
         try:
-            with httpx.Client(follow_redirects=True, timeout=timeout) as client:
-                method = self.config.http.method.upper()
-                if method not in {"HEAD", "GET"}:
-                    return CheckResult(False, f"invalid http method {method!r}")
-                response = client.request(method, host.url)
-                if (
-                    method == "HEAD"
-                    and self.config.http.fallback_to_get
-                    and response.status_code in _HEAD_FALLBACK_STATUS_CODES
-                ):
-                    response = client.get(host.url)
+            if self.client is not None:
+                return self._check_with_client(self.client, host)
+            with httpx.Client(follow_redirects=True, timeout=_http_timeout(self.config)) as client:
+                return self._check_with_client(client, host)
         except httpx.HTTPError as exc:
             return CheckResult(False, str(exc))
-        return CheckResult(
-            200 <= response.status_code <= 299, f"http status {response.status_code}"
-        )
 
 
 def default_checkers(config: EffectiveConfig):
     from manuheart.models import CheckType
 
-    http = HttpChecker(config)
+    client = httpx.Client(follow_redirects=True, timeout=_http_timeout(config))
+    http = HttpChecker(config, client=client, close_client=True)
     icmp = IcmpChecker(config)
     return {CheckType.ICMP: icmp, CheckType.HTTP: http, CheckType.HTTPS: http}
