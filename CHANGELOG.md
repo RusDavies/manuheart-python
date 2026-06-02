@@ -1,0 +1,51 @@
+# Changelog
+
+## v0.1.0 - Internal baseline
+
+Status: internal/private baseline; not a public release.
+
+### Added
+
+- Python package and CLI for Manuheart health checks.
+- JSON configuration as the primary supported config format.
+- Optional YAML configuration support via the `yaml` extra.
+- Typed domain models for hosts, groups, systems, statuses, checks, reports, and config.
+- ICMP checker backed by `icmplib`.
+- HTTP/S checker backed by `httpx`, with configurable `HEAD`/`GET` behavior and safe `HEAD` to `GET` fallback.
+- Clean typed JSON reports for `hoststatus`, `groupstatus`, and `sysstatus`.
+- Previous-state loading from clean Python reports and legacy-shaped Bash reports.
+- Host/group/system `unknown`, grace, critical-group, and rollup semantics.
+- Per-host checker error isolation and missing-checker warnings.
+- Warning-aware previous-state degradation.
+- Semantic config warnings for valid-but-suspicious health models.
+- API override validation.
+- Minimal check/daemon logging through `runtime.log_file` and `runtime.log_level`.
+- Checker diagnostic details in host reports, with normalization and length bounding.
+- Shared report metadata (`run_id`, `generated_at`) across report files.
+- Public API extension types for injected checkers, clocks, sleepers, daemon event callbacks, config overrides, and previous state.
+- CLI commands: `check`, `daemon`, and `validate-config`.
+- Public deployment smoke config using harmless well-known endpoints.
+- Local QA gates for linting, typing, tests, localhost Bash/Python comparison, dependency audit, and clean install smoke.
+
+### Removed / intentionally not included
+
+- Legacy Bash config parsing as a product surface.
+- Drop-in Bash replacement requirement.
+- Public PyPI or public repository release posture.
+- Real infrastructure fixtures or reports.
+- Bounded check concurrency; deferred until real deployment scale justifies it.
+
+### Verification for baseline
+
+The baseline is considered releasable internally only after the documented release-readiness gate passes:
+
+```bash
+.venv/bin/python -m ruff check src tests scripts
+.venv/bin/python -m mypy src/manuheart
+.venv/bin/python -m pytest -q
+.venv/bin/python scripts/check_localhost_compatibility.py
+.venv/bin/python scripts/check_dependency_security.py
+.venv/bin/python -m manuheart validate-config --config examples/deployment-test/public-smoke.json
+.venv/bin/python -m manuheart check --config examples/deployment-test/public-smoke.json
+.venv/bin/python scripts/check_clean_install.py
+```

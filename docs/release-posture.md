@@ -49,8 +49,18 @@ Before any internal release artifact is treated as releasable, run:
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/check_localhost_compatibility.py
 .venv/bin/python scripts/check_dependency_security.py
+.venv/bin/python -m manuheart validate-config --config examples/deployment-test/public-smoke.json
+.venv/bin/python -m manuheart check --config examples/deployment-test/public-smoke.json
 .venv/bin/python scripts/check_clean_install.py
 ```
+
+## Internal baseline tag posture
+
+The first internal baseline should be tagged as `v0.1.0` only after the release-readiness gate passes on `main`.
+
+The tag is an internal source-control marker, not approval to publish to PyPI, make the repository public, or deploy against real monitored hosts.
+
+For `v0.1.0`, the package metadata version remains `0.1.0` and the changelog entry is maintained in `CHANGELOG.md`.
 
 ## Approval boundaries
 

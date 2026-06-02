@@ -345,3 +345,18 @@ Pre-merge gate on branch `ops-api-polish-1-6`:
 - `scripts/check_clean_install.py`: passed.
 
 Implemented the first six fresh code-review opportunities: semantic config warnings for valid-but-suspicious health models; strict API override value validation; minimal check/daemon logging via `runtime.log_file` and `runtime.log_level`; checker detail normalization/truncation before host report storage; shared `run_id`/`generated_at` metadata in all three reports; and public API support for injected previous state or deliberately skipping previous-state disk loading.
+
+## Evidence for v0.1.0 internal baseline readiness
+
+Release-readiness gate on branch `release-readiness-v0.1.0`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 83 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed.
+- `scripts/check_clean_install.py`: passed.
+
+Added `CHANGELOG.md` with internal `v0.1.0` baseline notes, linked it from the README, and documented the internal baseline tag posture in `docs/release-posture.md`. This is an internal source-control baseline only; it does not approve public PyPI publication, public repository visibility, or deployment against real monitored hosts.

@@ -71,6 +71,7 @@ Run the local verification gate:
 - [Deployment test config](docs/deployment-test-config.md)
 - [Release posture](docs/release-posture.md)
 - [Security and privacy notes](docs/security-privacy-notes.md)
+- [Changelog](CHANGELOG.md)
 - [QA evidence](docs/qa-evidence.md)
 - [Implementation checklist](docs/implementation-checklist.md)
 - [Bash implementation understanding](docs/bash-implementation-understanding.md)
