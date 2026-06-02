@@ -48,10 +48,37 @@ def _float(value: Any, name: str) -> float:
         raise ConfigError(f"invalid number for {name}: {value!r}") from exc
 
 
+def _int_at_least(value: Any, name: str, minimum: int) -> int:
+    parsed = _int(value, name)
+    if parsed < minimum:
+        raise ConfigError(f"{name} must be >= {minimum}")
+    return parsed
+
+
+def _int_greater_than(value: Any, name: str, minimum: int) -> int:
+    parsed = _int(value, name)
+    if parsed <= minimum:
+        raise ConfigError(f"{name} must be > {minimum}")
+    return parsed
+
+
+def _float_greater_than(value: Any, name: str, minimum: float) -> float:
+    parsed = _float(value, name)
+    if parsed <= minimum:
+        raise ConfigError(f"{name} must be > {minimum:g}")
+    return parsed
+
+
 def _mapping(value: Any, name: str) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
         raise ConfigError(f"{name} must be an object")
     return value
+
+
+def _validate_keys(item: Mapping[str, Any], allowed: set[str], path: str) -> None:
+    unknown = sorted(set(item) - allowed)
+    if unknown:
+        raise ConfigError(f"{path} has unknown key(s): {', '.join(unknown)}")
 
 
 def _list(value: Any, name: str) -> list[Any]:
@@ -72,6 +99,13 @@ def _http_method(value: Any, name: str) -> str:
     if method not in {"HEAD", "GET"}:
         raise ConfigError(f"{name} must be HEAD or GET")
     return method
+
+
+def _run_mode(value: Any, name: str) -> str:
+    mode = str(value).strip().lower()
+    if mode not in {"once", "daemon"}:
+        raise ConfigError(f"{name} must be once or daemon")
+    return mode
 
 
 def _resolve_path(value: str | Path | None, base: Path | None = None) -> Path | None:
@@ -155,6 +189,11 @@ def _structured_definitions(
     for idx, raw_item in enumerate(_list(data.get("groups", []), "groups")):
         path = f"groups[{idx}]"
         item = _mapping(raw_item, path)
+        _validate_keys(
+            item,
+            {"name", "system", "critical", "type", "min_count", "failure_grace"},
+            path,
+        )
         name = str(_required(item, "name", path))
         system = str(_required(item, "system", path))
         critical = _bool(_required(item, "critical", path))
@@ -170,9 +209,11 @@ def _structured_definitions(
             system=system,
             critical=critical,
             check_type=check_type,
-            min_count=_int(_required(item, "min_count", path), f"{path}.min_count"),
-            failure_grace=_int(
-                _required(item, "failure_grace", path), f"{path}.failure_grace"
+            min_count=_int_at_least(
+                _required(item, "min_count", path), f"{path}.min_count", 0
+            ),
+            failure_grace=_int_at_least(
+                _required(item, "failure_grace", path), f"{path}.failure_grace", -1
             ),
         )
         if group_definition.name in groups:
@@ -182,6 +223,7 @@ def _structured_definitions(
     for idx, raw_item in enumerate(_list(data.get("hosts", []), "hosts")):
         path = f"hosts[{idx}]"
         item = _mapping(raw_item, path)
+        _validate_keys(item, {"name", "group", "url"}, path)
         host_definition = HostDefinition(
             name=str(_required(item, "name", path)),
             group=str(_required(item, "group", path)),
@@ -203,22 +245,36 @@ def _structured_definitions(
 def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> EffectiveConfig:
     path = path.resolve()
     config_dir = path.parent
+    _validate_keys(data, {"runtime", "checks", "groups", "hosts"}, "top-level config")
     runtime = _mapping(data.get("runtime", {}), "runtime")
     checks = _mapping(data.get("checks", {}), "checks")
+    _validate_keys(
+        runtime,
+        {"var_dir", "log_file", "log_level", "check_period", "run_mode", "status_files"},
+        "runtime",
+    )
+    _validate_keys(checks, {"http", "icmp"}, "checks")
     http = _mapping(checks.get("http", {}), "checks.http")
     icmp = _mapping(checks.get("icmp", {}), "checks.icmp")
+    _validate_keys(
+        http,
+        {"connect_timeout", "max_time", "method", "fallback_to_get"},
+        "checks.http",
+    )
+    _validate_keys(icmp, {"timeout", "count", "privileged"}, "checks.icmp")
     var_dir = _resolve_path(runtime.get("var_dir", "var/manuheart"), config_dir) or Path(
         "var/manuheart"
     )
     status_files = _mapping(runtime.get("status_files", {}), "runtime.status_files")
+    _validate_keys(status_files, {"hosts", "groups", "systems"}, "runtime.status_files")
     return EffectiveConfig(
         config_file=path,
         config_dir=config_dir,
         var_dir=var_dir,
         log_file=_resolve_path(runtime.get("log_file"), config_dir),
-        log_level=_int(runtime.get("log_level", 3), "log_level"),
-        check_period=_int(runtime.get("check_period", 3), "check_period"),
-        run_mode=str(runtime.get("run_mode", "once")),
+        log_level=_int_at_least(runtime.get("log_level", 3), "runtime.log_level", 0),
+        check_period=_int_greater_than(runtime.get("check_period", 3), "runtime.check_period", 0),
+        run_mode=_run_mode(runtime.get("run_mode", "once"), "runtime.run_mode"),
         reports=ReportDestinations(
             hosts=_resolve_path(
                 status_files.get("hosts", var_dir / "status/hoststatus"), config_dir
@@ -234,14 +290,16 @@ def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> Effective
             or var_dir / "status/sysstatus",
         ),
         http=HttpCheckSettings(
-            connect_timeout=_float(http.get("connect_timeout", 3), "checks.http.connect_timeout"),
-            max_time=_float(http.get("max_time", 5), "checks.http.max_time"),
+            connect_timeout=_float_greater_than(
+                http.get("connect_timeout", 3), "checks.http.connect_timeout", 0
+            ),
+            max_time=_float_greater_than(http.get("max_time", 5), "checks.http.max_time", 0),
             method=_http_method(http.get("method", "HEAD"), "checks.http.method"),
             fallback_to_get=_bool(http.get("fallback_to_get", True)),
         ),
         icmp=IcmpCheckSettings(
-            timeout=_float(icmp.get("timeout", 1), "checks.icmp.timeout"),
-            count=_int(icmp.get("count", 1), "icmp.count"),
+            timeout=_float_greater_than(icmp.get("timeout", 1), "checks.icmp.timeout", 0),
+            count=_int_greater_than(icmp.get("count", 1), "checks.icmp.count", 0),
             privileged=_bool(icmp.get("privileged", False)),
         ),
     )

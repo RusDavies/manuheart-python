@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -143,4 +144,96 @@ def test_structured_config_rejects_unknown_http_method(tmp_path):
     config = tmp_path / "bad.json"
     config.write_text('{"checks": {"http": {"method": "POST"}}, "groups": [], "hosts": []}')
     with pytest.raises(ConfigError, match="checks.http.method must be HEAD or GET"):
+        load_config(config)
+
+
+@pytest.mark.parametrize(
+    ("patch", "message"),
+    [
+        ({"surprise": True}, "top-level config has unknown key"),
+        ({"runtime": {"status_file": "bad"}}, "runtime has unknown key"),
+        (
+            {"runtime": {"status_files": {"host": "bad"}}},
+            "runtime.status_files has unknown key",
+        ),
+        ({"checks": {"smtp": {}}}, "checks has unknown key"),
+        ({"checks": {"http": {"verb": "GET"}}}, "checks.http has unknown key"),
+        ({"checks": {"icmp": {"packets": 2}}}, "checks.icmp has unknown key"),
+        ({"groups": [{"extra": True}]}, r"groups\[0\] has unknown key"),
+        ({"hosts": [{"extra": True}]}, r"hosts\[0\] has unknown key"),
+    ],
+)
+def test_structured_config_rejects_unknown_keys(tmp_path, patch, message):
+    data = {
+        "runtime": {},
+        "checks": {},
+        "groups": [
+            {
+                "name": "g",
+                "system": "s",
+                "critical": True,
+                "type": "icmp",
+                "min_count": 1,
+                "failure_grace": 1,
+            }
+        ],
+        "hosts": [{"name": "h", "group": "g", "url": "n/a"}],
+    }
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(data.get(key), dict):
+            data[key].update(value)
+        elif isinstance(value, list) and isinstance(data.get(key), list):
+            data[key][0].update(value[0])
+        else:
+            data[key] = value
+    config = tmp_path / "bad.json"
+    config.write_text(json.dumps(data))
+    with pytest.raises(ConfigError, match=message):
+        load_config(config)
+
+
+@pytest.mark.parametrize(
+    ("patch", "message"),
+    [
+        ({"runtime": {"log_level": -1}}, "runtime.log_level must be >= 0"),
+        ({"runtime": {"check_period": 0}}, "runtime.check_period must be > 0"),
+        ({"runtime": {"run_mode": "sometimes"}}, "runtime.run_mode must be once or daemon"),
+        ({"checks": {"http": {"connect_timeout": 0}}}, "checks.http.connect_timeout must be > 0"),
+        ({"checks": {"http": {"max_time": 0}}}, "checks.http.max_time must be > 0"),
+        ({"checks": {"icmp": {"timeout": 0}}}, "checks.icmp.timeout must be > 0"),
+        ({"checks": {"icmp": {"count": 0}}}, "checks.icmp.count must be > 0"),
+        ({"groups": [{"min_count": -1}]}, r"groups\[0\]\.min_count must be >= 0"),
+        ({"groups": [{"failure_grace": -2}]}, r"groups\[0\]\.failure_grace must be >= -1"),
+    ],
+)
+def test_structured_config_rejects_invalid_numeric_bounds(tmp_path, patch, message):
+    data = {
+        "runtime": {},
+        "checks": {},
+        "groups": [
+            {
+                "name": "g",
+                "system": "s",
+                "critical": True,
+                "type": "icmp",
+                "min_count": 1,
+                "failure_grace": 1,
+            }
+        ],
+        "hosts": [{"name": "h", "group": "g", "url": "n/a"}],
+    }
+    for key, value in patch.items():
+        if isinstance(value, dict) and isinstance(data.get(key), dict):
+            for nested_key, nested_value in value.items():
+                if isinstance(nested_value, dict) and isinstance(data[key].get(nested_key), dict):
+                    data[key][nested_key].update(nested_value)
+                else:
+                    data[key][nested_key] = nested_value
+        elif isinstance(value, list) and isinstance(data.get(key), list):
+            data[key][0].update(value[0])
+        else:
+            data[key] = value
+    config = tmp_path / "bad.json"
+    config.write_text(json.dumps(data))
+    with pytest.raises(ConfigError, match=message):
         load_config(config)

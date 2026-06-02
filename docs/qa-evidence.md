@@ -245,3 +245,17 @@ Pre-merge gate on branch `implement-health-state-semantics`:
 - `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
 
 Implemented the documented state model from `docs/health-state-semantics.md`: hosts only become `down` after remaining non-`up` beyond grace, host `unknown` can keep groups/systems `unknown` while grace is pending, `min_count: 0` groups report `up`, and critical `unknown` groups propagate system `unknown` instead of `up`.
+
+## Evidence for stricter structured config validation
+
+Pre-merge gate on branch `stricter-config-validation`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 63 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+
+Added strict unknown-key checks for top-level config, `runtime`, `runtime.status_files`, `checks`, `checks.http`, `checks.icmp`, group entries, and host entries. Added numeric bounds validation for log level, check period, HTTP/ICMP timeouts, ICMP count, group `min_count`, and group `failure_grace`, plus `runtime.run_mode` validation. Added targeted tests for these cases.

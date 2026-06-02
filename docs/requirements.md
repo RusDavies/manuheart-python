@@ -7,6 +7,8 @@ Status: Draft.
 - Load single-file JSON config.
 - Load single-file YAML config when the optional YAML extra is installed.
 - Reject unsupported config formats clearly.
+- Reject unknown JSON/YAML config keys clearly.
+- Validate numeric bounds for runtime/check/group settings.
 - Apply CLI/API overrides with precedence over config-file values.
 - Run ICMP checks using a Python ICMP library.
 - Run HTTP/S checks using a Python HTTP client library.
@@ -26,6 +28,7 @@ Status: Draft.
 - `python -m manuheart --help` works.
 - JSON and YAML fixtures normalize to equivalent host/group definitions.
 - Unsupported legacy-style config filenames fail with clear errors.
+- Unknown JSON/YAML keys and invalid numeric bounds fail with clear `ConfigError`s.
 - CLI/API override precedence is covered by tests.
 - Fake-checker tests cover up/down/unknown rollup behaviour, including host grace and critical-group unknown propagation.
 - Checker implementation tests mock `icmplib` and `httpx` rather than depending on external network state.
