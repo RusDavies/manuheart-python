@@ -30,9 +30,9 @@ def hosts_payload(result: CheckRunResult) -> dict:
                 "name": state.name,
                 "group": state.group,
                 "url": state.url,
-                "lastUp": state.last_up,
-                "lastChecked": state.last_checked,
-                "failCount": str(state.fail_count),
+                "last_up": state.last_up,
+                "last_checked": state.last_checked,
+                "fail_count": state.fail_count,
                 "status": state.status.value,
             }
             for state in result.hosts.values()
@@ -46,13 +46,13 @@ def groups_payload(result: CheckRunResult) -> dict:
             {
                 "name": state.name,
                 "system": state.system,
-                "critical": "yes" if state.critical else "no",
+                "critical": state.critical,
                 "type": state.check_type.value,
-                "minCount": str(state.min_count),
-                "failGrace": str(state.failure_grace),
-                "lastUp": state.last_up,
-                "lastChecked": state.last_checked,
-                "instanceCount": str(state.instance_count),
+                "min_count": state.min_count,
+                "failure_grace": state.failure_grace,
+                "last_up": state.last_up,
+                "last_checked": state.last_checked,
+                "instance_count": state.instance_count,
                 "status": state.status.value,
             }
             for state in result.groups.values()
@@ -65,9 +65,9 @@ def systems_payload(result: CheckRunResult) -> dict:
         "systems": [
             {
                 "name": state.name,
-                "lastUp": state.last_up,
-                "lastChecked": state.last_checked,
-                "failureCount": str(state.failure_count),
+                "last_up": state.last_up,
+                "last_checked": state.last_checked,
+                "failure_count": state.failure_count,
                 "status": state.status.value,
             }
             for state in result.systems.values()

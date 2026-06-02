@@ -47,12 +47,12 @@
 
 ## Compatibility-first readiness backlog
 
-- [ ] Preserve report filenames and top-level keys while converting inner fields to cleaner typed JSON.
-- [ ] Use Pythonic snake_case field names in clean typed report records.
-- [ ] Implement clean typed report output as the default Python report format.
-- [ ] Keep report status fields as enum-like strings (`up`, `down`, `unknown`).
-- [ ] Keep report timestamp fields as consistently ISO-8601 strings.
-- [ ] Add tests proving report fields use typed JSON values where practical.
+- [x] Preserve report filenames and top-level keys while converting inner fields to cleaner typed JSON.
+- [x] Use Pythonic snake_case field names in clean typed report records.
+- [x] Implement clean typed report output as the default Python report format.
+- [x] Keep report status fields as enum-like strings (`up`, `down`, `unknown`).
+- [x] Keep report timestamp fields as consistently ISO-8601 strings.
+- [x] Add tests proving report fields use typed JSON values where practical.
 - [x] Decide whether safe real-world Bash configs can be used as compatibility fixtures.
 - [ ] Add broader synthetic compatibility fixtures after exact localhost output matching is resolved.
 - [ ] Add expanded synthetic compatibility fixtures for multi-host, HTTP/S, optional group, duplicate, and failure-grace scenarios.
