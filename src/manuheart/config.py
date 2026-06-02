@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from manuheart.errors import ConfigError, UnsupportedConfigFormatError
 from manuheart.models import (
@@ -127,6 +127,32 @@ def _resolve_status_path(value: str | Path | None, var_dir: Path, default_name: 
     return var_dir / path
 
 
+def _optional_path(value: object, name: str) -> Path | None:
+    if value is None:
+        return None
+    if isinstance(value, str | Path):
+        return Path(value)
+    raise ConfigError(f"{name} must be a path string")
+
+
+def _optional_int_at_least(value: object, name: str, minimum: int) -> int | None:
+    if value is None:
+        return None
+    return _int_at_least(value, name, minimum)
+
+
+def _optional_int_greater_than(value: object, name: str, minimum: int) -> int | None:
+    if value is None:
+        return None
+    return _int_greater_than(value, name, minimum)
+
+
+def _optional_run_mode(value: object, name: str) -> str | None:
+    if value is None:
+        return None
+    return _run_mode(value, name)
+
+
 def _infer_format(path: Path, requested: ConfigFormat) -> ConfigFormat:
     if requested != ConfigFormat.AUTO:
         return requested
@@ -150,25 +176,23 @@ def normalize_overrides(overrides: ConfigOverridesInput | None) -> ConfigOverrid
     if unknown:
         raise ConfigError(f"unknown config override(s): {', '.join(sorted(unknown))}")
     values = dict(overrides)
-    path_fields = {
-        "var_dir",
-        "log_file",
-        "host_status_file",
-        "group_status_file",
-        "system_status_file",
-    }
-    for field in path_fields:
-        if values.get(field) is not None:
-            values[field] = Path(cast(str | Path, values[field]))
     return ConfigOverrides(
-        var_dir=cast(Path | None, values.get("var_dir")),
-        log_file=cast(Path | None, values.get("log_file")),
-        log_level=cast(int | None, values.get("log_level")),
-        check_period=cast(int | None, values.get("check_period")),
-        run_mode=cast(str | None, values.get("run_mode")),
-        host_status_file=cast(Path | None, values.get("host_status_file")),
-        group_status_file=cast(Path | None, values.get("group_status_file")),
-        system_status_file=cast(Path | None, values.get("system_status_file")),
+        var_dir=_optional_path(values.get("var_dir"), "override.var_dir"),
+        log_file=_optional_path(values.get("log_file"), "override.log_file"),
+        log_level=_optional_int_at_least(values.get("log_level"), "override.log_level", 0),
+        check_period=_optional_int_greater_than(
+            values.get("check_period"), "override.check_period", 0
+        ),
+        run_mode=_optional_run_mode(values.get("run_mode"), "override.run_mode"),
+        host_status_file=_optional_path(
+            values.get("host_status_file"), "override.host_status_file"
+        ),
+        group_status_file=_optional_path(
+            values.get("group_status_file"), "override.group_status_file"
+        ),
+        system_status_file=_optional_path(
+            values.get("system_status_file"), "override.system_status_file"
+        ),
     )
 
 
@@ -190,6 +214,38 @@ def apply_overrides(config: EffectiveConfig, overrides: ConfigOverrides) -> Effe
         run_mode=overrides.run_mode or config.run_mode,
         reports=reports,
     )
+
+
+def semantic_warnings(
+    config: EffectiveConfig,
+    groups: Mapping[str, GroupDefinition],
+    hosts: Mapping[str, HostDefinition],
+    *,
+    base_run_mode: str | None = None,
+    overrides: ConfigOverrides | None = None,
+) -> tuple[str, ...]:
+    warnings: list[str] = []
+    if not groups:
+        warnings.append("configuration defines no groups")
+    if not hosts:
+        warnings.append("configuration defines no hosts")
+    for group_name, group in sorted(groups.items()):
+        host_count = sum(1 for host in hosts.values() if host.group == group_name)
+        if host_count == 0 and group.min_count > 0:
+            warnings.append(f"group {group_name!r} has no hosts")
+        if group.min_count > host_count:
+            warnings.append(
+                f"group {group_name!r} min_count {group.min_count} exceeds host count {host_count}"
+            )
+    for system in sorted({group.system for group in groups.values()}):
+        system_groups = [group for group in groups.values() if group.system == system]
+        if not any(group.critical for group in system_groups):
+            warnings.append(f"system {system!r} has no critical groups")
+    if overrides and overrides.run_mode is not None and base_run_mode != config.run_mode:
+        warnings.append(
+            f"runtime.run_mode {base_run_mode!r} overridden by API/CLI to {config.run_mode!r}"
+        )
+    return tuple(warnings)
 
 
 def _structured_definitions(
@@ -313,8 +369,16 @@ def _load_json(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
         raise ConfigError(f"invalid JSON config: {exc.msg}") from exc
     data = _mapping(data, "top-level config")
     groups, hosts = _structured_definitions(data)
-    effective = apply_overrides(_effective_from_structured(path, data), overrides)
-    return LoadedConfiguration(effective=effective, groups=groups, hosts=hosts)
+    base_effective = _effective_from_structured(path, data)
+    effective = apply_overrides(base_effective, overrides)
+    return LoadedConfiguration(
+        effective=effective,
+        groups=groups,
+        hosts=hosts,
+        warnings=semantic_warnings(
+            effective, groups, hosts, base_run_mode=base_effective.run_mode, overrides=overrides
+        ),
+    )
 
 
 def _load_yaml(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
@@ -330,8 +394,16 @@ def _load_yaml(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
         raise ConfigError(f"invalid YAML config: {exc}") from exc
     data = _mapping(data, "top-level config")
     groups, hosts = _structured_definitions(data)
-    effective = apply_overrides(_effective_from_structured(path, data), overrides)
-    return LoadedConfiguration(effective=effective, groups=groups, hosts=hosts)
+    base_effective = _effective_from_structured(path, data)
+    effective = apply_overrides(base_effective, overrides)
+    return LoadedConfiguration(
+        effective=effective,
+        groups=groups,
+        hosts=hosts,
+        warnings=semantic_warnings(
+            effective, groups, hosts, base_run_mode=base_effective.run_mode, overrides=overrides
+        ),
+    )
 
 
 def load_config(

@@ -89,6 +89,19 @@ Impact: once a real config contains many hosts, cycle duration becomes the sum o
 
 Suggested fix: defer until needed, then add bounded concurrency with deterministic report ordering. Do not add async machinery merely for decorative complexity. We are writing a health checker, not summoning Kubernetes in a trench coat.
 
+### 9. Fresh review polish implemented
+
+Implemented after a second code review pass:
+
+- semantic configuration warnings for valid-but-suspicious models;
+- API override type/bound validation;
+- minimal check/daemon logging via `runtime.log_file` / `runtime.log_level`;
+- checker detail normalization/truncation before report storage;
+- shared report metadata with `run_id` and `generated_at`;
+- public API support for injected previous state or skipping disk previous-state loading.
+
+These changes improve operator feedback and library ergonomics without changing the core health model.
+
 ## Recommended priority
 
 1. Implement documented `unknown`/grace state semantics.

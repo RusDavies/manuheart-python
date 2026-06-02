@@ -12,17 +12,17 @@ from manuheart.models import (
     EffectiveConfig,
     GroupState,
     HostState,
+    PreviousStateSnapshot,
     Status,
     SystemState,
 )
 
 
 @dataclass(frozen=True, slots=True)
-class PreviousState:
+class PreviousState(PreviousStateSnapshot):
     hosts: dict[str, HostState]
     groups: dict[str, GroupState]
     systems: dict[str, SystemState]
-    warnings: tuple[str, ...] = ()
 
 
 def _safe_json(path: Path, label: str, warnings: list[str]) -> dict[str, Any]:

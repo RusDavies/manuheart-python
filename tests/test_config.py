@@ -197,6 +197,76 @@ def test_structured_config_rejects_unknown_http_method(tmp_path):
         load_config(config)
 
 
+def test_structured_config_emits_semantic_warnings(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "runtime": {"run_mode": "daemon"},
+                "groups": [
+                    {
+                        "name": "empty-critical",
+                        "system": "s1",
+                        "critical": True,
+                        "type": "icmp",
+                        "min_count": 1,
+                        "failure_grace": 1,
+                    },
+                    {
+                        "name": "noncritical-only",
+                        "system": "s2",
+                        "critical": False,
+                        "type": "icmp",
+                        "min_count": 2,
+                        "failure_grace": 1,
+                    },
+                ],
+                "hosts": [{"name": "h", "group": "noncritical-only", "url": "n/a"}],
+            }
+        )
+    )
+
+    loaded = load_config(config, overrides={"run_mode": "once"})
+
+    assert loaded.warnings == (
+        "group 'empty-critical' has no hosts",
+        "group 'empty-critical' min_count 1 exceeds host count 0",
+        "group 'noncritical-only' min_count 2 exceeds host count 1",
+        "system 's2' has no critical groups",
+        "runtime.run_mode 'daemon' overridden by API/CLI to 'once'",
+    )
+
+
+def test_structured_config_warns_for_empty_config(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps({"groups": [], "hosts": []}))
+
+    loaded = load_config(config)
+
+    assert loaded.warnings == (
+        "configuration defines no groups",
+        "configuration defines no hosts",
+    )
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        ({"check_period": "banana"}, "invalid integer for override.check_period"),
+        ({"check_period": 0}, "override.check_period must be > 0"),
+        ({"log_level": -1}, "override.log_level must be >= 0"),
+        ({"run_mode": "sometimes"}, "override.run_mode must be once or daemon"),
+        ({"var_dir": 123}, "override.var_dir must be a path string"),
+    ],
+)
+def test_api_overrides_are_type_validated(tmp_path, overrides, message):
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps({"groups": [], "hosts": []}))
+
+    with pytest.raises(ConfigError, match=message):
+        load_config(config, overrides=overrides)
+
+
 @pytest.mark.parametrize(
     ("patch", "message"),
     [

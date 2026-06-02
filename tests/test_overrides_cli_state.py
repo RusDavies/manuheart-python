@@ -3,7 +3,13 @@ import subprocess
 import sys
 
 from manuheart.api import CheckResult, CheckType, load_config, run_check, run_daemon, write_reports
-from manuheart.models import ConfigOverrides, ReportDestinations, Status
+from manuheart.models import (
+    ConfigOverrides,
+    HostState,
+    PreviousStateSnapshot,
+    ReportDestinations,
+    Status,
+)
 
 
 class FakeChecker:
@@ -50,6 +56,73 @@ def test_previous_state_is_loaded_for_fail_count(tmp_path):
     second = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(False)}, clock=lambda: "t2")
     assert second.hosts["localhost-icmp/127.0.0.1"].fail_count == 2
     assert second.systems["localhost-system"].failure_count == 2
+
+
+def test_run_check_can_skip_disk_previous_state(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={"host_status_file": tmp_path / "hoststatus"},
+    )
+    loaded.effective.reports.hosts.write_text("not-json")
+
+    result = run_check(
+        loaded,
+        checkers={CheckType.ICMP: FakeChecker(False)},
+        clock=lambda: "t1",
+        load_previous=False,
+    )
+
+    assert not any("invalid JSON" in warning for warning in result.warnings)
+    assert result.hosts["localhost-icmp/127.0.0.1"].fail_count == 1
+
+
+def test_run_check_accepts_injected_previous_state(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={"host_status_file": tmp_path / "hoststatus"},
+    )
+    previous = PreviousStateSnapshot(
+        hosts={
+            "localhost-icmp/127.0.0.1": HostState(
+                name="127.0.0.1",
+                group="localhost-icmp",
+                url="n/a",
+                fail_count=3,
+            )
+        },
+        warnings=("injected previous warning",),
+    )
+
+    result = run_check(
+        loaded,
+        checkers={CheckType.ICMP: FakeChecker(False)},
+        clock=lambda: "t1",
+        previous_state=previous,
+    )
+
+    assert result.hosts["localhost-icmp/127.0.0.1"].fail_count == 4
+    assert "injected previous warning" in result.warnings
+
+
+def test_log_file_records_check_and_report_events(tmp_path):
+    log_file = tmp_path / "manuheart.log"
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={
+            "log_file": log_file,
+            "log_level": 2,
+            "host_status_file": tmp_path / "hoststatus",
+            "group_status_file": tmp_path / "groupstatus",
+            "system_status_file": tmp_path / "sysstatus",
+        },
+    )
+
+    result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "t1")
+    write_reports(result)
+
+    log_text = log_file.read_text()
+    assert f"check run {result.run_id} completed" in log_text
+    assert f"check run {result.run_id} reports written" in log_text
 
 
 def test_cli_writes_reports_with_overrides(tmp_path):

@@ -185,6 +185,16 @@ class CheckRunResult:
     hosts: dict[str, HostState]
     groups: dict[str, GroupState]
     systems: dict[str, SystemState]
+    run_id: str
+    generated_at: str
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class PreviousStateSnapshot:
+    hosts: Mapping[str, HostState] = field(default_factory=dict)
+    groups: Mapping[str, GroupState] = field(default_factory=dict)
+    systems: Mapping[str, SystemState] = field(default_factory=dict)
     warnings: tuple[str, ...] = ()
 
 

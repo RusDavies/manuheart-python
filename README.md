@@ -47,6 +47,10 @@ Typed extension points such as `CheckerMap`, `ClockSource`, `SleepFunction`, and
 `DaemonEventCallback` are exported from `manuheart.api` for callers that inject custom
 checkers, clocks, daemon sleepers, or daemon event hooks.
 
+Library callers can also pass `previous_state=` to `run_check()` for in-memory state
+continuity, or `load_previous=False` when they want a single cycle that deliberately avoids
+reading previous report files.
+
 Run the local verification gate:
 
 ```bash
