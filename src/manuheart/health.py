@@ -49,7 +49,9 @@ def update_host_state(
 
     fail_count = base.fail_count + 1
     status = base.status
-    if group.failure_grace >= 0 and fail_count >= group.failure_grace:
+    if base.status == Status.DOWN:
+        status = Status.DOWN
+    elif group.failure_grace >= 0 and fail_count > group.failure_grace:
         status = Status.DOWN
     return HostState(
         name=definition.name,
@@ -73,16 +75,18 @@ def rollup_groups(
     for name in sorted(group_defs):
         definition = group_defs[name]
         prior = previous.get(name)
-        up_count = sum(
-            1 for host in host_states.values() if host.group == name and host.status == Status.UP
-        )
-        seen_count = sum(1 for host in host_states.values() if host.group == name)
-        if seen_count == 0:
-            status = Status.UNKNOWN
-            last_up = prior.last_up if prior else "unknown"
+        group_hosts = [host for host in host_states.values() if host.group == name]
+        up_count = sum(1 for host in group_hosts if host.status == Status.UP)
+        unknown_count = sum(1 for host in group_hosts if host.status == Status.UNKNOWN)
+        if definition.min_count == 0:
+            status = Status.UP
+            last_up = now
         elif up_count >= definition.min_count:
             status = Status.UP
             last_up = now
+        elif up_count + unknown_count >= definition.min_count:
+            status = Status.UNKNOWN
+            last_up = prior.last_up if prior else "unknown"
         else:
             status = Status.DOWN
             last_up = prior.last_up if prior else "unknown"
@@ -111,11 +115,12 @@ def rollup_systems(
     result: dict[str, SystemState] = {}
     for system in systems:
         groups = [group for group in group_states.values() if group.system == system]
-        status = (
-            Status.DOWN
-            if any(g.critical and g.status == Status.DOWN for g in groups)
-            else Status.UP
-        )
+        if any(g.critical and g.status == Status.DOWN for g in groups):
+            status = Status.DOWN
+        elif any(g.critical and g.status == Status.UNKNOWN for g in groups):
+            status = Status.UNKNOWN
+        else:
+            status = Status.UP
         prior = previous.get(system)
         if status == Status.UP:
             failure_count = 0

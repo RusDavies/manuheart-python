@@ -231,3 +231,17 @@ Pre-merge gate on branch `remove-legacy-config-format`:
 - `manuheart check --config examples/deployment-test/public-smoke.json`: passed.
 
 Removed legacy Bash `.conf` plus pipe-delimited `groups`/`hosts` config loading from the Python product surface. JSON and YAML are now the only supported config formats. Removed compatibility root flags `--once`/`--daemon` and legacy host/group file overrides from the CLI. Kept previous-state legacy report-field tolerance because it is isolated report robustness, not config-format support.
+
+## Evidence for documented health state semantics
+
+Pre-merge gate on branch `implement-health-state-semantics`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed; accepted migration differences now include `optional-example` reporting `up` for explicit `min_count: 0` semantics instead of Bash `unknown`.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+
+Implemented the documented state model from `docs/health-state-semantics.md`: hosts only become `down` after remaining non-`up` beyond grace, host `unknown` can keep groups/systems `unknown` while grace is pending, `min_count: 0` groups report `up`, and critical `unknown` groups propagate system `unknown` instead of `up`.
