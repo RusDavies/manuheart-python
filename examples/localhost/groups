@@ -1,3 +1,0 @@
-# group           | system           | critical | type | min instance count | failure count grace
-localhost-icmp    | localhost-system | yes      | icmp | 1                  | 1
-optional-example  | localhost-system | no       | icmp | 0                  | -1

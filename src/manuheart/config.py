@@ -1,4 +1,4 @@
-"""Configuration loaders for legacy, JSON, and YAML Manuheart config."""
+"""Configuration loaders for JSON and YAML Manuheart config."""
 
 from __future__ import annotations
 
@@ -21,35 +21,6 @@ from manuheart.models import (
     LoadedConfiguration,
     ReportDestinations,
 )
-
-_CONFIG_KEYS = {
-    "CONFIGDIR",
-    "CONFIGFILE",
-    "VARDIR",
-    "LOGFILE",
-    "LOGLEVEL",
-    "CHECKPERIOD",
-    "RUNMODE",
-    "GROUPFILE",
-    "HOSTFILE",
-    "HOSTSTATUSOUTFILE",
-    "GROUPSTATUSOUTFILE",
-    "SYSSTATUSOUTFILE",
-}
-
-
-def _strip_comment(line: str) -> str:
-    stripped = line.lstrip()
-    if stripped.startswith("#"):
-        return ""
-    for idx, char in enumerate(line):
-        if char == "#" and idx > 0 and line[idx - 1].isspace():
-            return line[:idx]
-    return line
-
-
-def _split_fields(line: str) -> list[str]:
-    return [part.strip() for part in line.split("|")]
 
 
 def _bool(value: Any) -> bool:
@@ -103,14 +74,6 @@ def _http_method(value: Any, name: str) -> str:
     return method
 
 
-def _expand(value: str, macros: Mapping[str, Path]) -> str:
-    result = str(value).strip().strip('"').strip("'")
-    for key, replacement in macros.items():
-        result = result.replace(f"_{key}_", str(replacement))
-        result = result.replace(f"{{{key}}}", str(replacement))
-    return result
-
-
 def _resolve_path(value: str | Path | None, base: Path | None = None) -> Path | None:
     if value is None:
         return None
@@ -128,7 +91,9 @@ def _infer_format(path: Path, requested: ConfigFormat) -> ConfigFormat:
         return ConfigFormat.JSON
     if suffix in {".yaml", ".yml"}:
         return ConfigFormat.YAML
-    return ConfigFormat.LEGACY
+    raise UnsupportedConfigFormatError(
+        f"unsupported config format for {path}; use .json or .yaml/.yml"
+    )
 
 
 def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -> ConfigOverrides:
@@ -144,8 +109,6 @@ def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -
     path_fields = {
         "var_dir",
         "log_file",
-        "host_file",
-        "group_file",
         "host_status_file",
         "group_status_file",
         "system_status_file",
@@ -159,8 +122,6 @@ def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -
         log_level=values.get("log_level"),
         check_period=values.get("check_period"),
         run_mode=values.get("run_mode"),
-        host_file=values.get("host_file"),
-        group_file=values.get("group_file"),
         host_status_file=values.get("host_status_file"),
         group_status_file=values.get("group_status_file"),
         system_status_file=values.get("system_status_file"),
@@ -183,75 +144,8 @@ def apply_overrides(config: EffectiveConfig, overrides: ConfigOverrides) -> Effe
             overrides.check_period if overrides.check_period is not None else config.check_period
         ),
         run_mode=overrides.run_mode or config.run_mode,
-        group_file=overrides.group_file or config.group_file,
-        host_file=overrides.host_file or config.host_file,
         reports=reports,
     )
-
-
-def _parse_groups(path: Path) -> tuple[dict[str, GroupDefinition], list[str]]:
-    warnings: list[str] = []
-    groups: dict[str, GroupDefinition] = {}
-    for line_no, raw in enumerate(path.read_text().splitlines(), start=1):
-        line = _strip_comment(raw).strip()
-        if not line:
-            continue
-        fields = _split_fields(line)
-        if len(fields) != 6:
-            warnings.append(f"{path}:{line_no}: expected 6 group fields, got {len(fields)}")
-            continue
-        name, system, critical, check_type, min_count, failure_grace = fields
-        if not name or not system:
-            warnings.append(f"{path}:{line_no}: group and system are required")
-            continue
-        if name in groups:
-            warnings.append(f"{path}:{line_no}: duplicate group {name!r} ignored")
-            continue
-        try:
-            groups[name] = GroupDefinition(
-                name=name,
-                system=system,
-                critical=_bool(critical),
-                check_type=CheckType(check_type.lower()),
-                min_count=_int(min_count, "min_count"),
-                failure_grace=_int(failure_grace, "failure_grace"),
-            )
-        except (ConfigError, ValueError) as exc:
-            warnings.append(f"{path}:{line_no}: {exc}")
-    return groups, warnings
-
-
-def _parse_hosts(
-    path: Path, groups: Mapping[str, GroupDefinition]
-) -> tuple[dict[str, HostDefinition], list[str]]:
-    warnings: list[str] = []
-    hosts: dict[str, HostDefinition] = {}
-    for line_no, raw in enumerate(path.read_text().splitlines(), start=1):
-        line = _strip_comment(raw).strip()
-        if not line:
-            continue
-        fields = _split_fields(line)
-        if len(fields) != 3:
-            warnings.append(f"{path}:{line_no}: expected 3 host fields, got {len(fields)}")
-            continue
-        name, group, url = fields
-        key = f"{group}/{name}"
-        if not name or not group or not url:
-            warnings.append(f"{path}:{line_no}: host, group, and url are required")
-            continue
-        if group not in groups:
-            warnings.append(f"{path}:{line_no}: unknown group {group!r} ignored")
-            continue
-        if key in hosts:
-            warnings.append(f"{path}:{line_no}: duplicate host {key!r} ignored")
-            continue
-        if groups[group].check_type in {CheckType.HTTP, CheckType.HTTPS} and not url.startswith(
-            ("http://", "https://")
-        ):
-            warnings.append(f"{path}:{line_no}: HTTP host {key!r} has invalid URL")
-            continue
-        hosts[key] = HostDefinition(name=name, group=group, url=url)
-    return hosts, warnings
 
 
 def _structured_definitions(
@@ -353,73 +247,6 @@ def _effective_from_structured(path: Path, data: Mapping[str, Any]) -> Effective
     )
 
 
-def _load_legacy(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
-    path = path.resolve()
-    config_dir = path.parent
-    macros: dict[str, Path] = {"CONFIGDIR": config_dir, "CONFIGFILE": path}
-    values: dict[str, str] = {"CONFIGDIR": str(config_dir), "CONFIGFILE": str(path)}
-    for raw in path.read_text().splitlines():
-        line = _strip_comment(raw).strip()
-        if not line or ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        key = key.strip()
-        if key not in _CONFIG_KEYS:
-            continue
-        macros = {
-            **macros,
-            **{k: Path(v) for k, v in values.items() if k.endswith(("DIR", "FILE"))},
-        }
-        values[key] = _expand(value, macros)
-        if key.endswith(("DIR", "FILE")):
-            macros[key] = Path(values[key])
-    var_dir = _resolve_path(values.get("VARDIR", "var/manuheart"), config_dir) or Path(
-        "var/manuheart"
-    )
-    group_file = overrides.group_file or _resolve_path(
-        values.get("GROUPFILE", config_dir / "groups"), config_dir
-    )
-    host_file = overrides.host_file or _resolve_path(
-        values.get("HOSTFILE", config_dir / "hosts"), config_dir
-    )
-    effective = EffectiveConfig(
-        config_file=path,
-        config_dir=config_dir,
-        var_dir=var_dir,
-        log_file=_resolve_path(values.get("LOGFILE"), config_dir),
-        log_level=_int(values.get("LOGLEVEL", 3), "LOGLEVEL"),
-        check_period=_int(values.get("CHECKPERIOD", 3), "CHECKPERIOD"),
-        run_mode=values.get("RUNMODE", "once"),
-        group_file=group_file,
-        host_file=host_file,
-        reports=ReportDestinations(
-            hosts=_resolve_path(
-                values.get("HOSTSTATUSOUTFILE", var_dir / "status/hoststatus"), config_dir
-            )
-            or var_dir / "status/hoststatus",
-            groups=_resolve_path(
-                values.get("GROUPSTATUSOUTFILE", var_dir / "status/groupstatus"), config_dir
-            )
-            or var_dir / "status/groupstatus",
-            systems=_resolve_path(
-                values.get("SYSSTATUSOUTFILE", var_dir / "status/sysstatus"), config_dir
-            )
-            or var_dir / "status/sysstatus",
-        ),
-    )
-    effective = apply_overrides(effective, overrides)
-    if effective.group_file is None or effective.host_file is None:
-        raise ConfigError("legacy configuration requires group and host files")
-    groups, group_warnings = _parse_groups(effective.group_file)
-    hosts, host_warnings = _parse_hosts(effective.host_file, groups)
-    return LoadedConfiguration(
-        effective=effective,
-        groups=groups,
-        hosts=hosts,
-        warnings=tuple(group_warnings + host_warnings),
-    )
-
-
 def _load_json(path: Path, overrides: ConfigOverrides) -> LoadedConfiguration:
     try:
         data = json.loads(path.read_text())
@@ -456,8 +283,6 @@ def load_config(
 ) -> LoadedConfiguration:
     normalized_overrides = normalize_overrides(overrides)
     selected = _infer_format(path, config_format)
-    if selected == ConfigFormat.LEGACY:
-        return _load_legacy(path, normalized_overrides)
     if selected == ConfigFormat.JSON:
         return _load_json(path, normalized_overrides)
     if selected == ConfigFormat.YAML:

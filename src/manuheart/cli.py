@@ -25,7 +25,7 @@ def _print_daemon_event(message: str) -> None:
 
 
 def _add_config_args(parser: argparse.ArgumentParser, *, required: bool = True) -> None:
-    parser.add_argument("--config", required=required, help="configuration file")
+    parser.add_argument("--config", required=required, help="JSON or YAML configuration file")
     parser.add_argument(
         "--config-format",
         choices=[x.value for x in ConfigFormat],
@@ -35,8 +35,6 @@ def _add_config_args(parser: argparse.ArgumentParser, *, required: bool = True) 
     parser.add_argument("--log-file", type=Path)
     parser.add_argument("--log-level", type=int)
     parser.add_argument("--check-period", type=int)
-    parser.add_argument("--host-file", type=Path)
-    parser.add_argument("--group-file", type=Path)
     parser.add_argument("--host-status-file", type=Path)
     parser.add_argument("--group-status-file", type=Path)
     parser.add_argument("--sys-status-file", type=Path)
@@ -49,8 +47,6 @@ def _overrides(args: argparse.Namespace, *, run_mode: str | None = None) -> dict
         "log_level": args.log_level,
         "check_period": args.check_period,
         "run_mode": run_mode,
-        "host_file": args.host_file,
-        "group_file": args.group_file,
         "host_status_file": args.host_status_file,
         "group_status_file": args.group_status_file,
         "system_status_file": args.sys_status_file,
@@ -60,9 +56,6 @@ def _overrides(args: argparse.Namespace, *, run_mode: str | None = None) -> dict
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="manuheart")
-    parser.add_argument("--once", action="store_true", help="run one check cycle (compatibility)")
-    parser.add_argument("--daemon", action="store_true", help="run daemon mode (compatibility)")
-    _add_config_args(parser, required=False)
     sub = parser.add_subparsers(dest="command")
     _add_config_args(sub.add_parser("check"), required=True)
     _add_config_args(sub.add_parser("validate-config"), required=True)
@@ -77,10 +70,6 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     command = args.command
-    if args.once:
-        command = "check"
-    if args.daemon:
-        command = "daemon"
     if command is None:
         parser.print_help()
         return 0

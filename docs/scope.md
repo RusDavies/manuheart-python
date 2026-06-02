@@ -6,8 +6,8 @@ Status: Draft.
 
 - Python library for Manuheart health checking.
 - CLI adapter over the public API.
-- JSON and optional YAML config loading for first-class new use.
-- Legacy config loading as a convenience/import path.
+- JSON config loading.
+- Optional YAML config loading.
 - ICMP and HTTP/S checks.
 - Host, group, and system rollup semantics.
 - Clean typed JSON reports with useful continuity from the Bash report model.

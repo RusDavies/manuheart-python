@@ -7,7 +7,7 @@ Status: Draft — CLI/API workflows only. No graphical UI exists.
 ### Library caller workflow
 
 1. Import the public API from `manuheart.api`.
-2. Load a legacy, JSON, or YAML configuration with `load_config()`.
+2. Load a JSON or YAML configuration with `load_config()`.
 3. Optionally pass overrides for paths, check period, run mode, or report destinations.
 4. Run one check cycle with `run_check()` or `run_check_from_config()`.
 5. Consume `CheckRunResult` directly, or write compatibility reports with `write_reports()`.
@@ -21,8 +21,6 @@ Library functions should return structured objects and should not print, exit th
 3. CLI runs one check cycle through the public API.
 4. CLI writes configured JSON status reports.
 5. CLI exits `0` on successful execution.
-
-`--once --config <file>` remains available as a compatibility-style invocation.
 
 ### CLI validate-config workflow
 
@@ -41,7 +39,7 @@ Daemon mode is not the preferred default; one-shot remains safer and easier to s
 
 ## UX principles
 
-- Preserve Bash-compatible paths and report names where practical.
+- Preserve stable report paths and names where practical.
 - Prefer explicit structured errors and warnings over clever terminal theatre.
 - Keep the CLI boring: arguments in, reports out, clear exit code.
 - Keep the library reusable: no hidden process exits, no terminal-only results.

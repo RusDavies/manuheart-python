@@ -1,6 +1,0 @@
-# host              | group          | uri
-frontend-a          | frontend-http  | http://frontend-a.example.test/health
-frontend-b          | frontend-http  | http://frontend-b.example.test/health
-api-a               | api-https      | https://api-a.example.test/ready
-batch-a             | batch-icmp     | n/a
-# optional-workers intentionally has no hosts. It exercises min_count=0 / non-critical empty group behaviour.

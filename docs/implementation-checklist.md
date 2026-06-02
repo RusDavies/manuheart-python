@@ -7,14 +7,13 @@ Status: Draft.
 - [x] Python package skeleton.
 - [x] Public API shell.
 - [x] API smoke tests.
-- [x] Legacy localhost fixture.
 - [x] JSON localhost fixture.
 - [x] YAML localhost fixture.
 - [x] Typed domain models.
-- [x] Legacy config parser.
+- [x] Legacy config parser removed after product reframe.
 - [x] JSON config parser.
 - [x] Optional YAML config parser.
-- [x] Config equivalence tests.
+- [x] JSON/YAML config equivalence tests.
 - [x] Health rollup engine with fake-checker tests.
 - [x] Override precedence support.
 - [x] Library-backed ICMP checker.
@@ -28,7 +27,7 @@ Status: Draft.
 ## Release-readiness checklist
 
 - [ ] Review README quick start against actual commands.
-- [ ] Review Bash-vs-Python compatibility output check.
-- [ ] Decide whether legacy output shape is sufficiently compatible for downstream consumers.
+- [x] Remove legacy Bash config input format from the Python product surface.
+- [x] Decide whether legacy output shape is needed for downstream consumers.
 - [x] Decide whether the project needs a remote repository.
 - [x] Decide whether to publish as an installable package or keep internal-only.

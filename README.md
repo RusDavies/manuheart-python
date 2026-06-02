@@ -27,12 +27,6 @@ Run the public deployment smoke config:
 .venv/bin/python -m manuheart check --config examples/deployment-test/public-smoke.json
 ```
 
-Run the compatibility-style legacy invocation:
-
-```bash
-.venv/bin/python -m manuheart --once --config examples/localhost/manuheart.conf
-```
-
 Run daemon mode:
 
 ```bash

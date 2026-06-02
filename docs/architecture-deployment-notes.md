@@ -9,7 +9,7 @@ Manuheart Python is a reusable Python library with a CLI adapter.
 Core layers:
 
 - `manuheart.api`: public import surface.
-- `manuheart.config`: legacy/JSON/YAML config loading and normalization.
+- `manuheart.config`: JSON/YAML config loading and normalization.
 - `manuheart.models`: typed domain models.
 - `manuheart.health`: health-state update and rollup engine.
 - `manuheart.checkers`: ICMP/HTTP checker adapters backed by Python libraries.

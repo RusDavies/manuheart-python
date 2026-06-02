@@ -10,7 +10,6 @@ from typing import Protocol
 
 class ConfigFormat(StrEnum):
     AUTO = "auto"
-    LEGACY = "legacy"
     JSON = "json"
     YAML = "yaml"
 
@@ -58,8 +57,6 @@ class EffectiveConfig:
     log_level: int = 3
     check_period: int = 3
     run_mode: str = "once"
-    group_file: Path | None = None
-    host_file: Path | None = None
     reports: ReportDestinations = field(
         default_factory=lambda: ReportDestinations(
             hosts=Path("var/manuheart/status/hoststatus"),
@@ -78,8 +75,6 @@ class ConfigOverrides:
     log_level: int | None = None
     check_period: int | None = None
     run_mode: str | None = None
-    host_file: Path | None = None
-    group_file: Path | None = None
     host_status_file: Path | None = None
     group_status_file: Path | None = None
     system_status_file: Path | None = None

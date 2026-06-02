@@ -4,9 +4,9 @@ Status: Draft.
 
 ## Functional requirements
 
-- Load first-class single-file JSON config.
-- Load first-class single-file YAML config when the optional YAML extra is installed.
-- Load legacy Manuheart config (`manuheart.conf` plus pipe-delimited `groups` and `hosts` files) as a convenience/import path.
+- Load single-file JSON config.
+- Load single-file YAML config when the optional YAML extra is installed.
+- Reject unsupported config formats clearly.
 - Apply CLI/API overrides with precedence over config-file values.
 - Run ICMP checks using a Python ICMP library.
 - Run HTTP/S checks using a Python HTTP client library.
@@ -24,7 +24,7 @@ Status: Draft.
 - `ruff check src tests` passes.
 - `python -m manuheart --help` works.
 - JSON and YAML fixtures normalize to equivalent host/group definitions.
-- Legacy fixtures remain covered as regression/import-path evidence.
+- Unsupported legacy-style config filenames fail with clear errors.
 - CLI/API override precedence is covered by tests.
 - Fake-checker tests cover up/down rollup behaviour.
 - Checker implementation tests mock `icmplib` and `httpx` rather than depending on external network state.
