@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "manuheart"
+version = "0.1.0"
+description = "Python rewrite of the Manuheart health checker"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Russ Davies" }
+]
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6.0"]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+manuheart = "manuheart.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/manuheart"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

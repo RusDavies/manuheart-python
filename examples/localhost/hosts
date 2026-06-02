@@ -1,0 +1,4 @@
+# host      | group          | uri
+127.0.0.1   | localhost-icmp | n/a
+# Optional group intentionally has no hosts. With min instance count 0, it should not
+# make localhost-system unhealthy.
