@@ -45,3 +45,7 @@ The tool writes compatibility JSON reports:
 - `sysstatus`
 
 Writes are atomic temp-file-and-replace operations.
+
+## Repository and release posture
+
+Current posture: internal-only. No public repository, public package publication, or shared-infrastructure deployment should happen without explicit Russ approval. See `docs/release-posture.md`.

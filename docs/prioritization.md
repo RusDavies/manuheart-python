@@ -17,12 +17,12 @@ Clean Python-library/API quality remains important, but the current public API f
 3. Compare generated report structure and stable fields against Bash outputs.
 4. Document accepted compatibility differences, if any.
 5. Add packaging/install smoke testing from a clean environment.
-6. Decide whether to create/push a remote repository.
-7. Decide whether Manuheart Python remains internal-only or gets a package/release path.
+6. Decide whether to create/push a remote repository. **Done:** keep local by default; if a remote is needed, create a private repository only after Russ approves.
+7. Decide whether Manuheart Python remains internal-only or gets a package/release path. **Done:** internal-only for now; no public PyPI/public repository posture without explicit approval.
 
 ## Current recommendation
 
-Treat the current project as a working internal-tool foundation, not deployment-approved production replacement. The next decision is whether Russ has safe real-world Bash configs that can be used as compatibility fixtures, or whether compatibility should remain limited to synthetic examples for now.
+Treat the current project as a working internal-tool foundation, not deployment-approved production replacement. Compatibility evidence remains synthetic-only unless Russ approves sanitized real-world fixtures. Release posture is documented in `docs/release-posture.md`: private/internal by default, no public publishing, and no deployment against real monitored hosts without explicit approval.
 
 ## Fixture-source decision
 

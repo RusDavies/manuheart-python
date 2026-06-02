@@ -30,5 +30,5 @@ Status: Draft.
 - [ ] Review README quick start against actual commands.
 - [ ] Review Bash-vs-Python compatibility output check.
 - [ ] Decide whether legacy output shape is sufficiently compatible for downstream consumers.
-- [ ] Decide whether the project needs a remote repository.
-- [ ] Decide whether to publish as an installable package or keep internal-only.
+- [x] Decide whether the project needs a remote repository.
+- [x] Decide whether to publish as an installable package or keep internal-only.
