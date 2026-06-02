@@ -47,6 +47,7 @@
 
 ## Compatibility-first readiness backlog
 
+- [ ] Preserve report filenames and top-level keys while converting inner fields to cleaner typed JSON.
 - [ ] Implement clean typed report output as the default Python report format.
 - [ ] Add tests proving report fields use typed JSON values where practical.
 - [x] Decide whether safe real-world Bash configs can be used as compatibility fixtures.

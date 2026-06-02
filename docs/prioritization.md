@@ -47,3 +47,13 @@ Implication: Bash output should be used as a compatibility reference, but Python
 Russ decided the next implementation priority should be **clean typed report output first**.
 
 Implication: add or revise the default Python report serialization so fields that are naturally numeric or boolean are emitted as typed JSON values, while preserving clear names and stable structure. A legacy-compatible report mode can be considered after the clean default is established.
+
+## Report structure decision
+
+Russ confirmed clean typed reports should keep the same top-level report files and keys:
+
+- `hoststatus` containing `hosts`
+- `groupstatus` containing `groups`
+- `sysstatus` containing `systems`
+
+Implication: report continuity should be preserved at the file/top-level collection level, while individual fields should become cleaner typed JSON values where practical.
