@@ -1,6 +1,7 @@
 import json
 
 from manuheart.api import CheckResult, CheckType, Status, load_config, run_check
+from manuheart.health import run_health_cycle
 
 
 class FakeChecker:
@@ -24,16 +25,51 @@ def test_health_rollup_up():
     result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "now")
     assert result.hosts["localhost-icmp/127.0.0.1"].status == Status.UP
     assert result.groups["localhost-icmp"].status == Status.UP
-    assert result.groups["optional-example"].status == Status.UNKNOWN
+    assert result.groups["optional-example"].status == Status.UP
     assert result.systems["localhost-system"].status == Status.UP
+
+
+def test_health_rollup_unknown_within_grace_without_previous_state():
+    loaded = load_config("examples/localhost/manuheart.json")
+    result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(False)}, clock=lambda: "now")
+    assert result.hosts["localhost-icmp/127.0.0.1"].status == Status.UNKNOWN
+    assert result.hosts["localhost-icmp/127.0.0.1"].fail_count == 1
+    assert result.groups["localhost-icmp"].status == Status.UNKNOWN
+    assert result.systems["localhost-system"].status == Status.UNKNOWN
 
 
 def test_health_rollup_down_after_grace():
     loaded = load_config("examples/localhost/manuheart.json")
-    result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(False)}, clock=lambda: "now")
-    assert result.hosts["localhost-icmp/127.0.0.1"].status == Status.DOWN
-    assert result.groups["localhost-icmp"].status == Status.DOWN
-    assert result.systems["localhost-system"].status == Status.DOWN
+    first = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(False)}, clock=lambda: "t1")
+    second = run_health_cycle(
+        loaded,
+        checkers={CheckType.ICMP: FakeChecker(False)},
+        clock=lambda: "t2",
+        previous_hosts=first.hosts,
+        previous_groups=first.groups,
+        previous_systems=first.systems,
+    )
+    assert second.hosts["localhost-icmp/127.0.0.1"].status == Status.DOWN
+    assert second.hosts["localhost-icmp/127.0.0.1"].fail_count == 2
+    assert second.groups["localhost-icmp"].status == Status.DOWN
+    assert second.systems["localhost-system"].status == Status.DOWN
+
+
+def test_health_rollup_preserves_last_known_up_during_grace():
+    loaded = load_config("examples/localhost/manuheart.json")
+    first = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "t1")
+    second = run_health_cycle(
+        loaded,
+        checkers={CheckType.ICMP: FakeChecker(False)},
+        clock=lambda: "t2",
+        previous_hosts=first.hosts,
+        previous_groups=first.groups,
+        previous_systems=first.systems,
+    )
+    assert second.hosts["localhost-icmp/127.0.0.1"].status == Status.UP
+    assert second.hosts["localhost-icmp/127.0.0.1"].fail_count == 1
+    assert second.groups["localhost-icmp"].status == Status.UP
+    assert second.systems["localhost-system"].status == Status.UP
 
 
 def test_synthetic_fixture_rolls_up_multiple_check_types_and_systems():
@@ -47,12 +83,12 @@ def test_synthetic_fixture_rolls_up_multiple_check_types_and_systems():
     result = run_check(loaded, checkers=checkers, clock=lambda: "2026-06-02T00:00:00Z")
 
     assert result.hosts["frontend-http/frontend-a"].status == Status.UP
-    assert result.hosts["frontend-http/frontend-b"].status == Status.DOWN
+    assert result.hosts["frontend-http/frontend-b"].status == Status.UNKNOWN
     assert result.groups["frontend-http"].instance_count == 1
-    assert result.groups["frontend-http"].status == Status.DOWN
+    assert result.groups["frontend-http"].status == Status.UNKNOWN
     assert result.groups["api-https"].status == Status.UP
-    assert result.groups["optional-workers"].status == Status.UNKNOWN
-    assert result.systems["synthetic-web"].status == Status.DOWN
+    assert result.groups["optional-workers"].status == Status.UP
+    assert result.systems["synthetic-web"].status == Status.UNKNOWN
     assert result.systems["synthetic-batch"].status == Status.UP
 
 
@@ -68,8 +104,32 @@ def test_synthetic_fixture_failure_grace_preserves_unknown_before_threshold():
 
     assert result.hosts["api-https/api-a"].fail_count == 1
     assert result.hosts["api-https/api-a"].status == Status.UNKNOWN
-    assert result.groups["api-https"].status == Status.DOWN
-    assert result.systems["synthetic-web"].status == Status.DOWN
+    assert result.groups["api-https"].status == Status.UNKNOWN
+    assert result.systems["synthetic-web"].status == Status.UNKNOWN
+
+
+def test_group_goes_down_when_pending_hosts_cannot_satisfy_min_count():
+    loaded = load_config("examples/synthetic-compat/manuheart.json")
+    checkers = {
+        CheckType.HTTP: NamedFakeChecker({"frontend-a": False, "frontend-b": False}),
+        CheckType.HTTPS: NamedFakeChecker({"api-a": True}),
+        CheckType.ICMP: NamedFakeChecker({"batch-a": True}),
+    }
+    first = run_check(loaded, checkers=checkers, clock=lambda: "t1")
+    second = run_health_cycle(
+        loaded,
+        checkers=checkers,
+        clock=lambda: "t2",
+        previous_hosts=first.hosts,
+        previous_groups=first.groups,
+        previous_systems=first.systems,
+    )
+
+    assert first.groups["frontend-http"].status == Status.UNKNOWN
+    assert second.hosts["frontend-http/frontend-a"].status == Status.DOWN
+    assert second.hosts["frontend-http/frontend-b"].status == Status.DOWN
+    assert second.groups["frontend-http"].status == Status.DOWN
+    assert second.systems["synthetic-web"].status == Status.DOWN
 
 
 def test_default_http_checker_reuses_one_client_per_cycle(tmp_path, monkeypatch):

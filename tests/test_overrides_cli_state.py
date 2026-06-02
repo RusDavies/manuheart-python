@@ -206,7 +206,7 @@ def test_cli_daemon_reports_config_errors_without_traceback():
     assert "Traceback" not in completed.stderr
 
 
-def test_status_type_from_previous_state(tmp_path):
+def test_status_type_from_previous_state_preserves_up_during_grace(tmp_path):
     destinations = ReportDestinations(
         hosts=tmp_path / "hoststatus",
         groups=tmp_path / "groupstatus",
@@ -223,4 +223,5 @@ def test_status_type_from_previous_state(tmp_path):
     first = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "t1")
     write_reports(first, destinations)
     second = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(False)}, clock=lambda: "t2")
-    assert second.hosts["localhost-icmp/127.0.0.1"].status == Status.DOWN
+    assert second.hosts["localhost-icmp/127.0.0.1"].status == Status.UP
+    assert second.hosts["localhost-icmp/127.0.0.1"].fail_count == 1

@@ -65,7 +65,7 @@
 
 ## Code analysis improvement backlog
 
-- [ ] Implement documented host/group/system `unknown` and grace state semantics.
+- [x] Implement documented host/group/system `unknown` and grace state semantics.
 - [ ] Add stricter structured config validation for unknown keys and numeric bounds.
 - [ ] Catch per-host checker crashes in the health engine and convert them to non-`up` check results.
 - [ ] Surface previous-state/report read degradation as warnings.

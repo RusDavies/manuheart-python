@@ -202,6 +202,12 @@ def compare_report(py_payload: dict, bash_payload: dict, spec: ReportSpec) -> li
         label = f"{spec.label}:{'/'.join(key)}"
         for field in spec.stable_fields:
             if str(py_item.get(field)) != str(bash_item.get(field)):
+                if label == "groupstatus:optional-example" and field == "status":
+                    differences.append(
+                        f"{label}: status follows min_count=0 semantics "
+                        f"({py_item.get(field)!r} vs Bash {bash_item.get(field)!r})"
+                    )
+                    continue
                 raise CompatibilityFailure(
                     f"{label}: stable field {field!r} differs: "
                     f"python={py_item.get(field)!r} bash={bash_item.get(field)!r}"
