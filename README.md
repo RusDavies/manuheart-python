@@ -36,12 +36,16 @@ Run daemon mode:
 Use the library API:
 
 ```python
-from manuheart.api import load_config, run_check, write_reports
+from manuheart.api import CheckerMap, load_config, run_check, write_reports
 
 config = load_config("examples/localhost/manuheart.json")
 result = run_check(config)
 write_reports(result)
 ```
+
+Typed extension points such as `CheckerMap`, `ClockSource`, `SleepFunction`, and
+`DaemonEventCallback` are exported from `manuheart.api` for callers that inject custom
+checkers, clocks, daemon sleepers, or daemon event hooks.
 
 Run the local verification gate:
 

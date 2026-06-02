@@ -302,3 +302,17 @@ Pre-merge gate on branch `status-files-relative-to-var-dir`:
 - `manuheart check --config examples/deployment-test/public-smoke.json`: passed and wrote reports under `examples/deployment-test/var/manuheart/tmp/public-smoke-reports/`.
 
 Changed status-file path semantics so omitted status files default to `var_dir/status/{hoststatus,groupstatus,sysstatus}`, relative `runtime.status_files.*` paths resolve under `runtime.var_dir`, and absolute status-file paths remain absolute. Updated examples and docs accordingly.
+
+## Evidence for public API extension-point typing
+
+Pre-merge gate on branch `tighten-public-api-typing`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 71 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+
+Added public API extension-point types: `CheckerMap`, `ClockSource`, `SleepFunction`, `DaemonEventCallback`, and `ConfigOverridesInput`. Updated `run_check()`, `run_check_from_config()`, `run_daemon()`, `load_config()`, `validate_config()`, and `run_health_cycle()` signatures to use those named types instead of `Any`. Added type-hint regression tests proving the public API exports and uses the named extension-point types.

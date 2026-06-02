@@ -69,13 +69,11 @@ Decision implemented: `runtime.var_dir` is resolved relative to the config file 
 
 This keeps runtime outputs under the runtime directory by default instead of scattering reports next to the config file.
 
-### 6. Tighten public API typing around extension points
+### 6. Public API extension-point typing tightened
 
-The project defines a `Checker` protocol, but public API signatures still use `Mapping[CheckType, Any]` for checker maps and `Any` for clocks, sleepers, and daemon event callbacks.
+Implemented: the public API now exports and uses named extension-point types for checker maps, clock sources, daemon sleepers, daemon event callbacks, and config overrides. `run_check()`, `run_check_from_config()`, `run_daemon()`, `load_config()`, and `validate_config()` use those types in their signatures.
 
-Impact: the implementation passes mypy, but the API contract is looser than the code intends.
-
-Suggested fix: add type aliases/protocols such as `CheckerMap`, `Clock`, `Sleeper`, and `DaemonEventCallback`; use them in `api.py` and `health.py`.
+This gives library callers clearer type guidance without changing runtime behaviour.
 
 ### 7. Consider adding checker details to host reports
 
@@ -99,6 +97,5 @@ Suggested fix: defer until needed, then add bounded concurrency with determinist
 2. Add stricter config unknown-key and numeric-bound validation.
 3. Catch per-host checker crashes.
 4. Surface previous-state/report read warnings.
-5. Tighten API typing.
-6. Add checker details to reports if operators need them.
-7. Add bounded concurrency only after scale justifies it.
+5. Add checker details to reports if operators need them.
+6. Add bounded concurrency only after scale justifies it.

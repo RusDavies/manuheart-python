@@ -131,9 +131,10 @@ Candidate public API:
 
 - `load_config(path, *, config_format=ConfigFormat.AUTO, overrides=None) -> LoadedConfiguration`
 - `validate_config(path, *, config_format=ConfigFormat.AUTO, overrides=None) -> ValidationResult`
-- `run_check(config: LoadedConfiguration, *, checkers=None, clock=None) -> CheckRunResult`
-- `run_check_from_config(path, *, config_format=ConfigFormat.AUTO, overrides=None) -> CheckRunResult`
-- `write_reports(result: CheckRunResult, destinations: ReportDestinations) -> None`
+- `run_check(config: LoadedConfiguration, *, checkers: CheckerMap | None = None, clock: ClockSource | None = None) -> CheckRunResult`
+- `run_check_from_config(path, *, config_format=ConfigFormat.AUTO, overrides: ConfigOverridesInput | None = None, checkers: CheckerMap | None = None, clock: ClockSource | None = None) -> CheckRunResult`
+- `write_reports(result: CheckRunResult, destinations: ReportDestinations | None = None) -> None`
+- `run_daemon(config: LoadedConfiguration, *, checkers: CheckerMap | None = None, clock: ClockSource | None = None, sleep: SleepFunction | None = None, max_cycles: int | None = None, on_event: DaemonEventCallback | None = None) -> int`
 
 Public API model exports:
 
@@ -146,10 +147,17 @@ Public API model exports:
 - `GroupState`
 - `SystemState`
 - `CheckResult`
+- `Checker`
+- `CheckerMap`
+- `ClockSource`
+- `ConfigOverrides`
+- `ConfigOverridesInput`
+- `DaemonEventCallback`
 - `LoadedConfiguration`
 - `CheckRunResult`
 - `ValidationResult`
 - `ReportDestinations`
+- `SleepFunction`
 
 API design rules:
 
@@ -158,7 +166,7 @@ API design rules:
 - no `sys.exit()` from library code;
 - return structured warnings/errors where practical;
 - raise typed exceptions only for boundary failures that callers cannot reasonably ignore;
-- allow dependency injection for checkers and clock;
+- allow dependency injection for checkers, clock sources, daemon sleepers, and daemon event callbacks through named public types;
 - keep internal modules importable but not part of the supported API contract unless exported deliberately.
 
 The CLI should be implemented by calling this API. If a feature cannot be used through the API, it should not be considered properly implemented.

@@ -6,13 +6,14 @@ import json
 from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from manuheart.errors import ConfigError, UnsupportedConfigFormatError
 from manuheart.models import (
     CheckType,
     ConfigFormat,
     ConfigOverrides,
+    ConfigOverridesInput,
     EffectiveConfig,
     GroupDefinition,
     HostDefinition,
@@ -139,7 +140,7 @@ def _infer_format(path: Path, requested: ConfigFormat) -> ConfigFormat:
     )
 
 
-def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -> ConfigOverrides:
+def normalize_overrides(overrides: ConfigOverridesInput | None) -> ConfigOverrides:
     if overrides is None:
         return ConfigOverrides()
     if isinstance(overrides, ConfigOverrides):
@@ -158,16 +159,16 @@ def normalize_overrides(overrides: Mapping[str, Any] | ConfigOverrides | None) -
     }
     for field in path_fields:
         if values.get(field) is not None:
-            values[field] = Path(values[field])
+            values[field] = Path(cast(str | Path, values[field]))
     return ConfigOverrides(
-        var_dir=values.get("var_dir"),
-        log_file=values.get("log_file"),
-        log_level=values.get("log_level"),
-        check_period=values.get("check_period"),
-        run_mode=values.get("run_mode"),
-        host_status_file=values.get("host_status_file"),
-        group_status_file=values.get("group_status_file"),
-        system_status_file=values.get("system_status_file"),
+        var_dir=cast(Path | None, values.get("var_dir")),
+        log_file=cast(Path | None, values.get("log_file")),
+        log_level=cast(int | None, values.get("log_level")),
+        check_period=cast(int | None, values.get("check_period")),
+        run_mode=cast(str | None, values.get("run_mode")),
+        host_status_file=cast(Path | None, values.get("host_status_file")),
+        group_status_file=cast(Path | None, values.get("group_status_file")),
+        system_status_file=cast(Path | None, values.get("system_status_file")),
     )
 
 
@@ -337,7 +338,7 @@ def load_config(
     path: Path,
     *,
     config_format: ConfigFormat = ConfigFormat.AUTO,
-    overrides: Mapping[str, Any] | ConfigOverrides | None = None,
+    overrides: ConfigOverridesInput | None = None,
 ) -> LoadedConfiguration:
     normalized_overrides = normalize_overrides(overrides)
     selected = _infer_format(path, config_format)
