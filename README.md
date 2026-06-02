@@ -4,6 +4,52 @@ Project folder for the Discord channel `#blakemere-healthcheck`.
 
 Purpose: track Manuheart Python work, notes, and backlog for this channel.
 
+
+## Quick start
+
+Install for local development:
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install -e '.[dev,yaml]'
+```
+
+Run one check cycle with JSON config:
+
+```bash
+.venv/bin/python -m manuheart check --config examples/localhost/manuheart.json
+```
+
+Validate config without running checks:
+
+```bash
+.venv/bin/python -m manuheart validate-config --config examples/localhost/manuheart.json
+```
+
+Compatibility-style legacy invocation:
+
+```bash
+.venv/bin/python -m manuheart --once --config examples/localhost/manuheart.conf
+```
+
+Use the library API directly:
+
+```python
+from manuheart.api import load_config, run_check, write_reports
+
+config = load_config("examples/localhost/manuheart.json")
+result = run_check(config)
+write_reports(result)
+```
+
+Run the local verification gate:
+
+```bash
+.venv/bin/python -m pytest -q
+.venv/bin/python -m ruff check src tests
+.venv/bin/python scripts/check_localhost_compatibility.py
+```
+
 ## Product process
 
 Target class: **Class 2 — Small Internal Tool**.

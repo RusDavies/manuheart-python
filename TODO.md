@@ -4,21 +4,21 @@
 
 - [x] Create lightweight product/problem framing.
 - [x] Define requirements and acceptance criteria.
-- [ ] Capture UX/workflow notes if a UI exists.
+- [x] Capture UX/workflow notes if a UI exists.
 - [x] Capture security/privacy notes.
-- [ ] Capture lightweight architecture/deployment notes.
-- [ ] Create implementation checklist.
-- [ ] Record basic QA evidence for completed work.
-- [ ] Add rollback/disable note.
-- [ ] Add AI-agent operation boundary note, unless Russ explicitly exempts it.
+- [x] Capture lightweight architecture/deployment notes.
+- [x] Create implementation checklist.
+- [x] Record basic QA evidence for completed work.
+- [x] Add rollback/disable note.
+- [x] Add AI-agent operation boundary note, unless Russ explicitly exempts it.
 
 ## Project discovery
 
-- [ ] Define scope: what Manuheart Python is responsible for.
-- [ ] Capture baseline inventory, current access assumptions, and dependencies.
-- [ ] Add README quick start for library API usage and CLI usage.
-- [ ] Add Bash-vs-Python output compatibility check for localhost fixtures.
-- [ ] Identify initial implementation or audit tasks.
+- [x] Define scope: what Manuheart Python is responsible for.
+- [x] Capture baseline inventory, current access assumptions, and dependencies.
+- [x] Add README quick start for library API usage and CLI usage.
+- [x] Add Bash-vs-Python output compatibility check for localhost fixtures.
+- [x] Identify initial implementation or audit tasks.
 - [ ] Prioritize remediation/build items with Russ.
 
 
