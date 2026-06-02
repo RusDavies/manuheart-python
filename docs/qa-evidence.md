@@ -82,3 +82,14 @@ Pre-merge gate on branch `add-clean-venv-smoke`:
 - `pytest`: 28 passed.
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
 - `scripts/check_clean_install.py`: passed; it created a temporary clean venv, installed `manuheart[yaml]` from the project root, imported the public API, validated JSON and YAML fixtures via the installed `manuheart` console script, ran a one-shot check, and verified report JSON records were written.
+
+## Evidence for previous-state loading hardening
+
+Pre-merge gate on branch `harden-previous-state-loading`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 30 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed.
+
+Added safe previous-state parsing for non-object payloads, non-list report collections, non-record entries, malformed integer fields, unknown statuses, unknown check types, and ambiguous boolean values. Malformed previous report data now degrades to safe defaults instead of crashing the next check cycle.

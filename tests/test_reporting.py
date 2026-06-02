@@ -1,7 +1,7 @@
 import json
 
 from manuheart.api import CheckResult, CheckType, load_config, run_check, write_reports
-from manuheart.models import ReportDestinations
+from manuheart.models import ReportDestinations, Status
 from manuheart.state import load_previous_groups, load_previous_hosts, load_previous_systems
 
 
@@ -160,3 +160,96 @@ def test_previous_state_loads_clean_and_legacy_report_fields(tmp_path):
     assert groups["legacy-group"].failure_grace == 3
     assert systems["clean-system"].failure_count == 5
     assert systems["legacy-system"].failure_count == 6
+
+
+def test_previous_state_malformed_values_degrade_to_defaults(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={
+            "host_status_file": tmp_path / "hoststatus",
+            "group_status_file": tmp_path / "groupstatus",
+            "system_status_file": tmp_path / "sysstatus",
+        },
+    )
+    loaded.effective.reports.hosts.write_text(
+        json.dumps(
+            {
+                "hosts": [
+                    "not-a-record",
+                    {
+                        "name": "bad-host",
+                        "group": "g",
+                        "url": None,
+                        "fail_count": "not-an-int",
+                        "status": "sideways",
+                    },
+                ]
+            }
+        )
+    )
+    loaded.effective.reports.groups.write_text(
+        json.dumps(
+            {
+                "groups": [
+                    {
+                        "name": "bad-group",
+                        "system": None,
+                        "critical": "definitely",
+                        "type": "smtp",
+                        "min_count": "nope",
+                        "failure_grace": "also-nope",
+                        "instance_count": "still-nope",
+                        "status": "sideways",
+                    }
+                ]
+            }
+        )
+    )
+    loaded.effective.reports.systems.write_text(
+        json.dumps(
+            {
+                "systems": [
+                    {
+                        "name": "bad-system",
+                        "failure_count": "not-an-int",
+                        "status": "sideways",
+                    }
+                ]
+            }
+        )
+    )
+
+    hosts = load_previous_hosts(loaded.effective)
+    groups = load_previous_groups(loaded.effective)
+    systems = load_previous_systems(loaded.effective)
+
+    assert hosts["g/bad-host"].url == "unknown"
+    assert hosts["g/bad-host"].fail_count == 0
+    assert hosts["g/bad-host"].status == Status.UNKNOWN
+    assert groups["bad-group"].system == "unknown"
+    assert groups["bad-group"].critical is False
+    assert groups["bad-group"].check_type == CheckType.ICMP
+    assert groups["bad-group"].min_count == 0
+    assert groups["bad-group"].failure_grace == 0
+    assert groups["bad-group"].instance_count == 0
+    assert groups["bad-group"].status == Status.UNKNOWN
+    assert systems["bad-system"].failure_count == 0
+    assert systems["bad-system"].status == Status.UNKNOWN
+
+
+def test_previous_state_ignores_non_object_payloads(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={
+            "host_status_file": tmp_path / "hoststatus",
+            "group_status_file": tmp_path / "groupstatus",
+            "system_status_file": tmp_path / "sysstatus",
+        },
+    )
+    loaded.effective.reports.hosts.write_text(json.dumps(["not", "an", "object"]))
+    loaded.effective.reports.groups.write_text(json.dumps({"groups": "not-a-list"}))
+    loaded.effective.reports.systems.write_text(json.dumps({"systems": ["not-a-record"]}))
+
+    assert load_previous_hosts(loaded.effective) == {}
+    assert load_previous_groups(loaded.effective) == {}
+    assert load_previous_systems(loaded.effective) == {}
