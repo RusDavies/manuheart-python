@@ -91,19 +91,23 @@ def main(argv: list[str] | None = None) -> int:
     overrides = _overrides(args, run_mode=run_mode)
 
     if command == "validate-config":
-        result = validate_config(args.config, config_format=args.config_format, overrides=overrides)
-        for warning in result.warnings:
+        validation = validate_config(
+            args.config,
+            config_format=args.config_format,
+            overrides=overrides,
+        )
+        for warning in validation.warnings:
             print(f"WARNING: {warning}", file=sys.stderr)
-        for error in result.errors:
+        for error in validation.errors:
             print(f"ERROR: {error}", file=sys.stderr)
-        return 0 if result.valid else 1
+        return 0 if validation.valid else 1
 
     if command == "check":
         try:
             loaded = load_config(args.config, config_format=args.config_format, overrides=overrides)
-            result = run_check(loaded)
-            write_reports(result)
-            for warning in result.warnings:
+            check_result = run_check(loaded)
+            write_reports(check_result)
+            for warning in check_result.warnings:
                 print(f"WARNING: {warning}", file=sys.stderr)
         except Exception as exc:  # noqa: BLE001 - CLI boundary prints clean operational errors
             _print_error(exc)

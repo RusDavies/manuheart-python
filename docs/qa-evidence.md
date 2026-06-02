@@ -148,3 +148,15 @@ Pre-merge gate on branch `http-client-injection`:
 - `scripts/check_clean_install.py`: passed.
 
 `HttpChecker` now accepts an injected HTTP client for cleaner tests and alternate callers. The default checker registry creates one shared `httpx.Client` for HTTP and HTTPS checks in a health cycle, and `run_health_cycle` closes default checker resources after the cycle completes.
+
+## Evidence for static typing gate and typed package marker
+
+Pre-merge gate on branch `typing-gate-pytyped`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed with no issues across 11 source files.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
+
+Added `mypy` and `types-PyYAML` to the development extra, added `src/manuheart/py.typed` as a PEP 561 marker included in the wheel, added mypy configuration, fixed source typing issues surfaced by mypy, and documented mypy in the local verification gate.
