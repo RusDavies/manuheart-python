@@ -94,4 +94,4 @@ Suggested fix: add a release-readiness gate using an available scanner (`pip-aud
 4. Improve CLI operational error handling.
 5. Then daemon observability, HTTP client reuse, static typing, and dependency review.
 
-Rationale: the first four reduce surprise crashes and false negatives, which matter most before treating this as a real replacement for the Bash tool.
+Rationale: the first four reduce surprise crashes and false negatives, which matter most before treating this as a real internal health-checking tool.

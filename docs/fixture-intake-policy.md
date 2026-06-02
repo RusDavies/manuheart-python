@@ -32,9 +32,9 @@ Only ingest real-world material when all of these are true:
 
 If any condition is unclear, stop and ask. Do not be clever. Clever is how monkeys invented incident reports.
 
-## Preferred replacement pattern
+## Preferred synthetic pattern
 
-When compatibility needs more coverage, create synthetic fixtures that model the behaviour rather than copying the real topology.
+When test coverage needs more realistic behaviour, create synthetic fixtures that model the behaviour rather than copying real topology.
 
 Examples of acceptable synthetic behaviours:
 

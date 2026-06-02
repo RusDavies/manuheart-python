@@ -60,8 +60,8 @@ Human approval is still required before:
 - publishing any package artifact outside the local machine;
 - deploying Manuheart Python against real monitored hosts;
 - importing real Manuheart configs, host lists, status reports, or logs into the repo;
-- declaring this a production replacement for the Bash implementation.
+- treating deployment against real monitored hosts as production-approved.
 
 ## Rationale
 
-The codebase is now packageable, typed, tested, smoke-tested from a clean install, and covered by a dependency/security audit gate. That is enough for internal release preparation. It is not, by itself, approval to publish operational tooling or expose internal monitoring assumptions.
+The codebase is now packageable, typed, tested, smoke-tested from a clean install, and covered by a dependency/security audit gate. That is enough for internal release preparation. It is not, by itself, approval to publish operational tooling, deploy against real monitored hosts, or expose internal monitoring assumptions.

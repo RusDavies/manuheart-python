@@ -1,52 +1,59 @@
 # Prioritization Notes
 
-Status: Accepted initial direction — compatibility-first replacement readiness.
+Status: Current direction — good internal Python implementation, not drop-in Bash replacement.
 
 ## Priority decision
 
-Russ accepted the recommendation to prioritize **drop-in Bash compatibility first**.
+Russ clarified that Manuheart Python does **not** need to be a drop-in replacement for an existing Bash deployment because there are no existing installations of the original Bash version to replace.
 
-Reasoning: before Manuheart Python is treated as a replacement for the Bash implementation, we need evidence that it preserves the compatibility contract that downstream consumers care about: config loading, report shape, report destinations, rollup semantics, and operational invocation patterns.
+The Bash implementation remains useful reference material for:
 
-Clean Python-library/API quality remains important, but the current public API foundation is good enough to proceed while compatibility evidence is expanded.
+- the host/group/system health model;
+- legacy config import support;
+- rollup semantics worth preserving;
+- migration-risk checks for anyone who does have old files later.
+
+It is no longer the primary product constraint.
 
 ## Current priority order
 
-1. Prove Bash-vs-Python compatibility for safe fixtures.
-2. Expand compatibility coverage beyond the localhost fixture if Russ can provide or approve safe non-secret configs.
-3. Compare generated report structure and stable fields against Bash outputs.
-4. Document accepted compatibility differences, if any.
-5. Add packaging/install smoke testing from a clean environment.
-6. Decide whether to create/push a remote repository. **Done:** keep local by default; if a remote is needed, create a private repository only after Russ approves.
-7. Decide whether Manuheart Python remains internal-only or gets a package/release path. **Done:** internal-only for now; no public PyPI/public repository posture without explicit approval.
+1. Keep the Python library/API clean, typed, and reusable.
+2. Keep the CLI as a thin adapter over the public API.
+3. Prefer first-class JSON/YAML configuration for new use.
+4. Keep legacy config loading as an import/convenience path, not the default product identity.
+5. Preserve useful report continuity where cheap, but do not contort the implementation for exact Bash-shaped output.
+6. Keep the release posture internal/private unless Russ explicitly approves wider publication.
+7. Use public-smoke or approved internal configs for deployment validation.
 
 ## Current recommendation
 
-Treat the current project as a working internal-tool foundation, not deployment-approved production replacement. Compatibility evidence remains synthetic-only unless Russ approves sanitized real-world fixtures. Release posture is documented in `docs/release-posture.md`: private/internal by default, no public publishing, and no deployment against real monitored hosts without explicit approval.
+Treat the current project as a working internal-tool product that is ready for controlled deployment testing, not as a production replacement exercise. The next useful proof is running it in a real target environment with either the public smoke config or an approved internal config, then deciding whether any operational polish is needed.
+
+Release posture is documented in `docs/release-posture.md`: private/internal by default, no public publishing, and no deployment against real monitored hosts without explicit approval.
 
 ## Fixture-source decision
 
 Russ decided to continue with **synthetic compatibility fixtures only** for now. Real-world Manuheart Bash configs should not be used unless separately approved and sanitized.
 
-Implication: compatibility work should expand the synthetic fixture suite to cover realistic behaviours without exposing internal topology or operational details. The standing intake guardrail is documented in `docs/fixture-intake-policy.md`.
+Implication: the existing synthetic fixtures are enough for regression coverage and historical-reference checks. Future fixture work should focus on realistic new-product scenarios unless real legacy configs are explicitly approved.
 
 ## Compatibility depth decision
 
-Russ decided to prioritize **exact Bash-output matching first** over broadening the synthetic fixture set.
+Previous compatibility work is now treated as regression evidence, not as the main product objective.
 
-Implication: the next compatibility work should compare localhost Bash-vs-Python output closely enough to identify migration-relevant differences, while allowing cleaner Python defaults. Any intentional differences should be documented before adding broader synthetic scenarios.
+Implication: keep `scripts/check_localhost_compatibility.py` because it catches accidental changes to report surfaces and health semantics. Do not add more exact Bash-output work unless a real consumer appears.
 
 ## Output-format decision
 
 Russ decided to **go cleaner from the get-go**.
 
-Implication: Bash output should be used as a compatibility reference, but Python does not need to preserve ugly legacy output details as the default. The default Python report format should prefer clean typed JSON where practical. If strict legacy report compatibility is needed later, add it as an explicit compatibility mode rather than making all users inherit Bash-shaped scars.
+Implication: Bash output can be used as historical reference, but Python does not need to preserve ugly legacy output details as the default. The default Python report format should prefer clean typed JSON where practical.
 
 ## Report-format implementation priority
 
-Russ decided the next implementation priority should be **clean typed report output first**.
+Clean typed report output is the default.
 
-Implication: add or revise the default Python report serialization so fields that are naturally numeric or boolean are emitted as typed JSON values, while preserving clear names and stable structure. A legacy-compatible report mode can be considered after the clean default is established.
+Implication: fields that are naturally numeric or boolean should be emitted as typed JSON values, with stable names and structure. Exact Bash-shaped report output should only be added if a concrete downstream consumer requires it.
 
 ## Report structure decision
 
@@ -56,7 +63,7 @@ Russ confirmed clean typed reports should keep the same top-level report files a
 - `groupstatus` containing `groups`
 - `sysstatus` containing `systems`
 
-Implication: report continuity should be preserved at the file/top-level collection level, while individual fields should become cleaner typed JSON values where practical.
+Implication: report continuity is useful, but it is not a mandate to preserve every Bash-era inner-field wart.
 
 ## Status value decision
 
@@ -88,7 +95,7 @@ Examples:
 - `instance_count` instead of `instanceCount`
 - `failure_count` instead of `failureCount`
 
-Implication: the clean default report format should preserve the outer report files/top-level keys, but use Pythonic field names and typed JSON values inside each record. Legacy field names can be considered only in an explicit compatibility mode if needed later.
+Implication: the clean default report format should preserve useful outer surfaces, but use Pythonic field names and typed JSON values inside each record.
 
 ## Legacy report mode decision
 
@@ -97,8 +104,8 @@ Decision: do **not** add an explicit legacy-compatible report mode now.
 Rationale:
 
 - Russ chose clean typed reports as the default from the start.
-- The current compatibility contract preserves the migration-relevant outer surfaces: filenames, top-level keys, record identities, stable descriptive fields, and status strings.
-- Previous-state loading already accepts both clean snake_case fields and legacy Bash field names, so existing report state can be consumed during migration.
-- Adding a legacy-output mode now would increase API/CLI surface area before there is evidence of a real downstream consumer that requires exact Bash-shaped inner fields.
+- There is no known deployed Bash installation or downstream consumer requiring exact Bash-shaped output.
+- Previous-state loading already accepts both clean snake_case fields and legacy Bash field names, so old state can still be consumed if it appears later.
+- Adding a legacy-output mode now would increase API/CLI surface area without evidence of need.
 
 Revisit this only if a concrete consumer requires strict legacy inner-field output such as `lastUp`, `failCount`, stringified numbers, or `critical: "yes" / "no"`. If that happens, implement it as an explicit opt-in mode, not as the default.

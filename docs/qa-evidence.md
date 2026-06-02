@@ -203,3 +203,16 @@ Pre-merge gate on branch `remote-and-public-smoke-config`:
 - `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
 
 Added `examples/deployment-test/public-smoke.json` and `docs/deployment-test-config.md` for deployment smoke testing against a tiny set of well-known public endpoints. Generated smoke-test reports are ignored via `.gitignore`.
+
+## Evidence for product-direction reframing away from drop-in replacement
+
+Pre-merge gate on branch `reframe-away-from-drop-in-replacement`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed with no issues across 11 source files.
+- `pytest`: 46 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `scripts/check_dependency_security.py`: passed; no known vulnerabilities found in releasable runtime dependencies plus optional YAML extra.
+- `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
+
+Updated product framing, scope, requirements, prioritization, release posture, fixture intake, and architecture notes to reflect Russ's decision that Manuheart Python does not need to be a drop-in Bash replacement because there are no existing Bash installations to replace. Bash compatibility is now treated as historical reference/regression evidence, while the main goal is a clean internal Python health-checking implementation.
