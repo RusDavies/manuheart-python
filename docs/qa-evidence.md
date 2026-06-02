@@ -62,3 +62,13 @@ Pre-merge gate on branch `block-real-world-fixture-intake`:
 - `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
 
 Added `docs/fixture-intake-policy.md` and linked it from privacy/security and prioritization notes. The policy blocks real-world Manuheart config/report fixture intake unless Russ explicitly approves a specific sanitized source set.
+
+## Evidence for legacy report mode decision
+
+Pre-merge gate on branch `decide-legacy-report-mode`:
+
+- `ruff check src tests scripts`: passed.
+- `pytest`: 28 passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+
+Recorded the decision not to add an explicit legacy-compatible report mode now. Clean typed JSON remains the default, previous-state loading can read legacy fields, and exact Bash-shaped output should be added only if a concrete downstream consumer requires it.

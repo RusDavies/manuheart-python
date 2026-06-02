@@ -59,6 +59,6 @@
 - [x] Tighten localhost Bash-vs-Python compatibility check to identify and document migration-relevant output differences.
 - [x] Keep real-world fixture intake blocked unless Russ separately approves sanitized configs.
 - [x] Document accepted compatibility differences between Bash and Python outputs.
-- [ ] Decide whether to add an explicit legacy-compatible report mode after clean typed output is established.
+- [x] Decide whether to add an explicit legacy-compatible report mode after clean typed output is established.
 - [ ] Add clean-venv install/package smoke test.
 - [ ] Decide remote repository and publishing/release posture.

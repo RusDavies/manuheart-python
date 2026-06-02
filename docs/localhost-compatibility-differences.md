@@ -45,3 +45,9 @@ Accepted differences:
 ```
 
 The script now prints accepted migration differences after passing hard compatibility checks, so future changes are less likely to smuggle in accidental format drift while wearing a fake moustache.
+
+## Legacy-output mode posture
+
+No explicit legacy-compatible report writer is currently planned. The project treats Bash-shaped inner fields as an accepted migration difference, not a default compatibility requirement.
+
+If a real downstream consumer requires exact legacy fields, add a separate opt-in legacy report mode then. Until that evidence exists, the default report path stays clean typed JSON.
