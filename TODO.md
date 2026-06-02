@@ -71,7 +71,7 @@
 - [x] Surface previous-state/report read degradation as warnings.
 - [x] Clarify or adjust relative path semantics for status files.
 - [x] Tighten public API typing around checker maps, clocks, sleepers, and daemon callbacks.
-- [ ] Consider adding checker detail fields to host reports.
+- [x] Add checker detail fields to host reports.
 - [ ] Consider bounded check concurrency after real deployment scale requires it.
 - [x] Harden previous-state loading against malformed report values.
 - [x] Add stricter structured JSON/YAML config validation and clearer `ConfigError` messages.

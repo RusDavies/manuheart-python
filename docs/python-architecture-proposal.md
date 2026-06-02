@@ -198,7 +198,7 @@ Suggested models:
 - `Status`: enum: `UP`, `DOWN`, `UNKNOWN`.
 - `GroupDefinition`.
 - `HostDefinition`.
-- `HostState`.
+- `HostState`, including checker diagnostic `detail` text.
 - `GroupState`.
 - `SystemState`.
 - `CheckResult`.

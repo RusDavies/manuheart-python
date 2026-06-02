@@ -75,13 +75,11 @@ Implemented: the public API now exports and uses named extension-point types for
 
 This gives library callers clearer type guidance without changing runtime behaviour.
 
-### 7. Consider adding checker details to host reports
+### 7. Checker detail fields added to host reports
 
-`CheckResult.detail` currently influences no report output. Details such as `http status 503`, timeout text, DNS failure, or packet loss would make reports more useful during diagnosis.
+Implemented: `CheckResult.detail` now flows into `HostState.detail` and the `hoststatus` report's `detail` field. Previous-state loading accepts the field when present and defaults to an empty string for older reports.
 
-Impact: downstream users see `down` but not why.
-
-Suggested fix: add an optional `detail` field to `HostState` and host reports, or add a separate diagnostic report if keeping status reports minimal matters more.
+This lets downstream users see not only `up`, `down`, or `unknown`, but also the checker detail such as `http status 503`, timeout text, or a checker-boundary error.
 
 ### 8. Consider bounded check concurrency after deployment pressure appears
 
@@ -97,5 +95,4 @@ Suggested fix: defer until needed, then add bounded concurrency with determinist
 2. Add stricter config unknown-key and numeric-bound validation.
 3. Catch per-host checker crashes.
 4. Surface previous-state/report read warnings.
-5. Add checker details to reports if operators need them.
-6. Add bounded concurrency only after scale justifies it.
+5. Add bounded concurrency only after scale justifies it.

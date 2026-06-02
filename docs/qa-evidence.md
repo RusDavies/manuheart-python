@@ -316,3 +316,17 @@ Pre-merge gate on branch `tighten-public-api-typing`:
 - `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
 
 Added public API extension-point types: `CheckerMap`, `ClockSource`, `SleepFunction`, `DaemonEventCallback`, and `ConfigOverridesInput`. Updated `run_check()`, `run_check_from_config()`, `run_daemon()`, `load_config()`, `validate_config()`, and `run_health_cycle()` signatures to use those named types instead of `Any`. Added type-hint regression tests proving the public API exports and uses the named extension-point types.
+
+## Evidence for host report checker details
+
+Pre-merge gate on branch `host-report-details`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 71 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+
+Added `HostState.detail` and serialized it to host reports as `detail`. `CheckResult.detail` now propagates through successful checks, missing-checker results, and checker exceptions. Previous-state loading accepts `detail` when present and defaults it to an empty string for older reports. Tests cover report serialization, previous-state loading, missing-checker detail, and checker-exception detail.

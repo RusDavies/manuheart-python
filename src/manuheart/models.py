@@ -114,6 +114,7 @@ class HostState:
     last_checked: str = "unknown"
     fail_count: int = 0
     status: Status = Status.UNKNOWN
+    detail: str = ""
 
     @property
     def key(self) -> str:

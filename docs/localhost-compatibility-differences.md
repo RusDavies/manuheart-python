@@ -35,6 +35,7 @@ Accepted differences:
   - `failureCount` -> `failure_count`;
 - numeric fields are JSON numbers instead of strings;
 - `critical` is a JSON boolean instead of `"yes"` / `"no"`;
+- host reports include a clean `detail` field carrying checker diagnostic text;
 - timestamps are ISO-8601 strings instead of locale-formatted date strings;
 - live timestamps and live status can vary slightly by runtime environment, but the localhost fixture currently checks stable status equivalence.
 

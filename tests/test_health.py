@@ -170,7 +170,9 @@ def test_checker_exception_marks_only_that_host_non_up_and_cycle_continues(tmp_p
     )
 
     assert result.hosts["g/bad-a"].status == Status.UNKNOWN
+    assert result.hosts["g/bad-a"].detail == "checker error: boom"
     assert result.hosts["g/good-a"].status == Status.UP
+    assert result.hosts["g/good-a"].detail == "fake"
     assert result.groups["g"].status == Status.UP
     assert result.systems["s"].status == Status.UP
     assert result.warnings == ("g/bad-a: checker error: boom",)
@@ -199,6 +201,7 @@ def test_missing_checker_marks_matching_hosts_non_up_and_cycle_continues(tmp_pat
     result = run_check(load_config(config), checkers={}, clock=lambda: "now")
 
     assert result.hosts["g/h"].status == Status.UNKNOWN
+    assert result.hosts["g/h"].detail == "no checker for icmp"
     assert result.groups["g"].status == Status.UNKNOWN
     assert result.systems["s"].status == Status.UNKNOWN
     assert result.warnings == ("g/h: no checker for icmp",)
