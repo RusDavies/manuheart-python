@@ -21,6 +21,7 @@ Status: Draft.
 - Write host, group, and system status reports atomically as clean typed JSON.
 - Expose a reusable public Python API.
 - Provide CLI commands as adapters over the public API.
+- Expose typed public extension points for checker maps, clock sources, daemon sleepers, daemon event callbacks, and config overrides.
 
 ## Acceptance criteria
 
@@ -32,6 +33,7 @@ Status: Draft.
 - Unknown JSON/YAML keys and invalid numeric bounds fail with clear `ConfigError`s.
 - Relative status-file paths are covered by tests and resolve under `var_dir`.
 - CLI/API override precedence is covered by tests.
+- Public API extension-point signatures are covered by type-hint regression tests.
 - Fake-checker tests cover up/down/unknown rollup behaviour, including host grace and critical-group unknown propagation.
 - Checker implementation tests mock `icmplib` and `httpx` rather than depending on external network state.
 - One-shot localhost smoke test writes parseable JSON reports.

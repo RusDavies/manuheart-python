@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 from manuheart.config import load_config as _load_config
 from manuheart.health import run_health_cycle
 from manuheart.models import (
+    Checker,
+    CheckerMap,
     CheckResult,
     CheckRunResult,
     CheckType,
+    ClockSource,
     ConfigFormat,
+    ConfigOverrides,
+    ConfigOverridesInput,
+    DaemonEventCallback,
     EffectiveConfig,
     GroupDefinition,
     GroupState,
@@ -20,6 +24,7 @@ from manuheart.models import (
     HostState,
     LoadedConfiguration,
     ReportDestinations,
+    SleepFunction,
     Status,
     SystemState,
     ValidationResult,
@@ -31,7 +36,13 @@ __all__ = [
     "CheckResult",
     "CheckRunResult",
     "CheckType",
+    "Checker",
+    "CheckerMap",
+    "ClockSource",
     "ConfigFormat",
+    "ConfigOverrides",
+    "ConfigOverridesInput",
+    "DaemonEventCallback",
     "EffectiveConfig",
     "GroupDefinition",
     "GroupState",
@@ -39,6 +50,7 @@ __all__ = [
     "HostState",
     "LoadedConfiguration",
     "ReportDestinations",
+    "SleepFunction",
     "Status",
     "SystemState",
     "ValidationResult",
@@ -55,7 +67,7 @@ def load_config(
     path: str | Path,
     *,
     config_format: ConfigFormat | str = ConfigFormat.AUTO,
-    overrides: Mapping[str, Any] | None = None,
+    overrides: ConfigOverridesInput | None = None,
 ) -> LoadedConfiguration:
     """Load and normalize a Manuheart configuration file."""
 
@@ -66,7 +78,7 @@ def validate_config(
     path: str | Path,
     *,
     config_format: ConfigFormat | str = ConfigFormat.AUTO,
-    overrides: Mapping[str, Any] | None = None,
+    overrides: ConfigOverridesInput | None = None,
 ) -> ValidationResult:
     """Validate a Manuheart configuration file without running checks."""
 
@@ -80,8 +92,8 @@ def validate_config(
 def run_check(
     config: LoadedConfiguration,
     *,
-    checkers: Mapping[CheckType, Any] | None = None,
-    clock: Any | None = None,
+    checkers: CheckerMap | None = None,
+    clock: ClockSource | None = None,
 ) -> CheckRunResult:
     """Run one health-check cycle using a loaded configuration."""
 
@@ -101,9 +113,9 @@ def run_check_from_config(
     path: str | Path,
     *,
     config_format: ConfigFormat | str = ConfigFormat.AUTO,
-    overrides: Mapping[str, Any] | None = None,
-    checkers: Mapping[CheckType, Any] | None = None,
-    clock: Any | None = None,
+    overrides: ConfigOverridesInput | None = None,
+    checkers: CheckerMap | None = None,
+    clock: ClockSource | None = None,
 ) -> CheckRunResult:
     """Load configuration and run one health-check cycle."""
 
@@ -123,11 +135,11 @@ def write_reports(result: CheckRunResult, destinations: ReportDestinations | Non
 def run_daemon(
     config: LoadedConfiguration,
     *,
-    checkers: Mapping[CheckType, Any] | None = None,
-    clock: Any | None = None,
-    sleep: Any | None = None,
+    checkers: CheckerMap | None = None,
+    clock: ClockSource | None = None,
+    sleep: SleepFunction | None = None,
     max_cycles: int | None = None,
-    on_event: Any | None = None,
+    on_event: DaemonEventCallback | None = None,
 ) -> int:
     """Run repeated check cycles. Primarily used by the CLI daemon adapter."""
 

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 
 class ConfigFormat(StrEnum):
@@ -80,6 +81,9 @@ class ConfigOverrides:
     system_status_file: Path | None = None
 
 
+ConfigOverridesInput: TypeAlias = Mapping[str, object] | ConfigOverrides
+
+
 @dataclass(frozen=True, slots=True)
 class GroupDefinition:
     name: str
@@ -147,6 +151,16 @@ class CheckResult:
 
 class Checker(Protocol):
     def check(self, host: HostDefinition, group: GroupDefinition) -> CheckResult: ...
+
+
+class ClockWithNow(Protocol):
+    def now(self) -> object: ...
+
+
+CheckerMap: TypeAlias = Mapping[CheckType, Checker]
+ClockSource: TypeAlias = Callable[[], object] | ClockWithNow
+SleepFunction: TypeAlias = Callable[[float], object]
+DaemonEventCallback: TypeAlias = Callable[[str], object]
 
 
 @dataclass(frozen=True, slots=True)

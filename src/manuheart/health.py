@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
-from typing import Any
 
 from manuheart.checkers import default_checkers
 from manuheart.models import (
+    CheckerMap,
     CheckResult,
     CheckRunResult,
-    CheckType,
+    ClockSource,
     GroupDefinition,
     GroupState,
     HostDefinition,
@@ -21,7 +21,7 @@ from manuheart.models import (
 )
 
 
-def _now(clock: Any | None = None) -> str:
+def _now(clock: ClockSource | None = None) -> str:
     if clock is None:
         return datetime.now(UTC).isoformat()
     value = clock() if callable(clock) else clock.now()
@@ -141,8 +141,8 @@ def rollup_systems(
 def run_health_cycle(
     config: LoadedConfiguration,
     *,
-    checkers: Mapping[CheckType, Any] | None = None,
-    clock: Any | None = None,
+    checkers: CheckerMap | None = None,
+    clock: ClockSource | None = None,
     previous_hosts: Mapping[str, HostState] | None = None,
     previous_groups: Mapping[str, GroupState] | None = None,
     previous_systems: Mapping[str, SystemState] | None = None,
