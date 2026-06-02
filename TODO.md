@@ -27,7 +27,10 @@
 - [ ] Create Python project skeleton with `pyproject.toml`, `src/manuheart/`, and `tests/`.
 - [ ] Port sample localhost config fixtures from `manuheart-bash`.
 - [ ] Implement typed domain models for hosts, groups, systems, statuses, and checks.
-- [ ] Implement compatible config, group, and host parsers.
+- [ ] Implement compatible legacy config, group, and host parsers.
+- [ ] Implement first-class JSON configuration parser using the same normalized domain model.
+- [ ] Implement optional YAML configuration parser, preferably behind a `yaml` package extra.
+- [ ] Add equivalence tests proving legacy, JSON, and YAML config can describe the same health model.
 - [ ] Implement pure health rollup logic with fake-checker tests.
 - [ ] Implement real ICMP and HTTP(S) checkers.
 - [ ] Implement previous-state loading and atomic JSON report writing.

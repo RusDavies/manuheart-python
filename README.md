@@ -20,7 +20,8 @@ Initial architecture proposal:
 - default to one-shot execution;
 - use typed Python domain models instead of shell-global associative arrays and delimiter serialization;
 - keep parsing, health rollup, checking, state, reporting, and CLI concerns separate;
-- preserve compatible config and JSON outputs first, then improve deliberately.
+- preserve compatible legacy config and JSON outputs first;
+- add first-class JSON/YAML configuration options that normalize into the same domain model.
 
 See:
 
