@@ -9,8 +9,10 @@ Status: Draft.
 - Reject unsupported config formats clearly.
 - Reject unknown JSON/YAML config keys clearly.
 - Validate numeric bounds for runtime/check/group settings.
+- Warn on valid but suspicious health models, such as empty configs, empty groups, impossible `min_count`, systems with no critical groups, or CLI/API run-mode overrides.
 - Resolve relative `runtime.status_files.*` paths under `runtime.var_dir`.
 - Apply CLI/API overrides with precedence over config-file values.
+- Validate CLI/API override values with the same clear `ConfigError` style used for config files.
 - Run ICMP checks using a Python ICMP library.
 - Run HTTP/S checks using a Python HTTP client library.
 - Roll host state into group state and group state into system state.
@@ -20,9 +22,12 @@ Status: Draft.
 - Load previous status from clean or legacy-shaped JSON reports where available.
 - Write host, group, and system status reports atomically as clean typed JSON.
 - Include checker diagnostic detail text in host status records.
+- Include shared report metadata (`run_id`, `generated_at`) in all report files so consumers can detect mixed generations.
 - Expose a reusable public Python API.
 - Provide CLI commands as adapters over the public API.
 - Expose typed public extension points for checker maps, clock sources, daemon sleepers, daemon event callbacks, and config overrides.
+- Let API callers inject previous state directly or skip previous-state disk loading.
+- Write minimal check/daemon log messages when `runtime.log_file` is configured.
 
 ## Acceptance criteria
 
@@ -32,10 +37,14 @@ Status: Draft.
 - JSON and YAML fixtures normalize to equivalent host/group definitions.
 - Unsupported legacy-style config filenames fail with clear errors.
 - Unknown JSON/YAML keys and invalid numeric bounds fail with clear `ConfigError`s.
+- Semantic config warnings are surfaced in validation and check results.
 - Relative status-file paths are covered by tests and resolve under `var_dir`.
 - CLI/API override precedence is covered by tests.
+- CLI/API override type and bound validation is covered by tests.
 - Public API extension-point signatures are covered by type-hint regression tests.
 - Host report tests prove checker detail text is serialized and previous-state loading tolerates missing details.
+- Report metadata tests prove host/group/system files share a matching `run_id` and `generated_at`.
+- API tests cover injected previous state and intentionally skipping disk previous-state loading.
 - Fake-checker tests cover up/down/unknown rollup behaviour, including host grace and critical-group unknown propagation.
 - Checker implementation tests mock `icmplib` and `httpx` rather than depending on external network state.
 - One-shot localhost smoke test writes parseable JSON reports.

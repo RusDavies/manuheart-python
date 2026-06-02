@@ -9,6 +9,7 @@ from manuheart.api import (
     ConfigOverrides,
     ConfigOverridesInput,
     DaemonEventCallback,
+    PreviousStateSnapshot,
     SleepFunction,
 )
 
@@ -19,6 +20,7 @@ def test_public_api_exports_extension_point_types():
     assert ConfigOverrides is not None
     assert ConfigOverridesInput is not None
     assert DaemonEventCallback is not None
+    assert PreviousStateSnapshot is not None
     assert SleepFunction is not None
 
 
@@ -30,7 +32,9 @@ def test_public_api_signatures_use_named_extension_types():
 
     assert run_check_hints["checkers"] == CheckerMap | None
     assert run_check_hints["clock"] == ClockSource | None
+    assert run_check_hints["previous_state"] == PreviousStateSnapshot | None
     assert run_from_config_hints["overrides"] == ConfigOverridesInput | None
+    assert run_from_config_hints["previous_state"] == PreviousStateSnapshot | None
     assert daemon_hints["checkers"] == CheckerMap | None
     assert daemon_hints["clock"] == ClockSource | None
     assert daemon_hints["sleep"] == SleepFunction | None

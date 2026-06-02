@@ -330,3 +330,18 @@ Pre-merge gate on branch `host-report-details`:
 - `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
 
 Added `HostState.detail` and serialized it to host reports as `detail`. `CheckResult.detail` now propagates through successful checks, missing-checker results, and checker exceptions. Previous-state loading accepts `detail` when present and defaults it to an empty string for older reports. Tests cover report serialization, previous-state loading, missing-checker detail, and checker-exception detail.
+
+## Evidence for code review polish items 1-6
+
+Pre-merge gate on branch `ops-api-polish-1-6`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 83 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed.
+- `scripts/check_clean_install.py`: passed.
+
+Implemented the first six fresh code-review opportunities: semantic config warnings for valid-but-suspicious health models; strict API override value validation; minimal check/daemon logging via `runtime.log_file` and `runtime.log_level`; checker detail normalization/truncation before host report storage; shared `run_id`/`generated_at` metadata in all three reports; and public API support for injected previous state or deliberately skipping previous-state disk loading.

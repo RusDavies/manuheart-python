@@ -28,6 +28,12 @@ class ExplodingChecker:
         return CheckResult(True, "fake")
 
 
+class VerboseChecker:
+    def check(self, host, group):
+        _ = host, group
+        return CheckResult(False, "line one\n" + ("x" * 700))
+
+
 def test_health_rollup_up():
     loaded = load_config("examples/localhost/manuheart.json")
     result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker(True)}, clock=lambda: "now")
@@ -205,6 +211,18 @@ def test_missing_checker_marks_matching_hosts_non_up_and_cycle_continues(tmp_pat
     assert result.groups["g"].status == Status.UNKNOWN
     assert result.systems["s"].status == Status.UNKNOWN
     assert result.warnings == ("g/h: no checker for icmp",)
+
+
+def test_checker_detail_is_normalized_and_bounded():
+    loaded = load_config("examples/localhost/manuheart.json")
+
+    result = run_check(loaded, checkers={CheckType.ICMP: VerboseChecker()}, clock=lambda: "now")
+
+    detail = result.hosts["localhost-icmp/127.0.0.1"].detail
+    assert "\n" not in detail
+    assert detail.startswith("line one ")
+    assert detail.endswith("…[truncated]")
+    assert len(detail) == 500
 
 
 def test_default_http_checker_reuses_one_client_per_cycle(tmp_path, monkeypatch):

@@ -81,3 +81,12 @@
 - [x] Reuse or inject HTTP clients for efficiency and cleaner checker tests.
 - [x] Add static typing gate and package typing marker (`py.typed`).
 - [x] Add dependency/security review gate before release.
+
+## Follow-up code review polish
+
+- [x] Add semantic config warnings for valid-but-suspicious health models.
+- [x] Validate public API override value types and bounds.
+- [x] Implement minimal check/daemon logging using `runtime.log_file` and `runtime.log_level`.
+- [x] Bound and normalize checker detail text before storing it in host reports.
+- [x] Add report-set metadata with matching `run_id` and `generated_at` across host/group/system reports.
+- [x] Add public API support for injected previous state or intentionally skipping disk previous-state loading.

@@ -10,6 +10,10 @@ from pathlib import Path
 from manuheart.models import CheckRunResult, ReportDestinations
 
 
+def metadata_payload(result: CheckRunResult) -> dict:
+    return {"run_id": result.run_id, "generated_at": result.generated_at}
+
+
 def _atomic_write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
@@ -25,6 +29,7 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
 
 def hosts_payload(result: CheckRunResult) -> dict:
     return {
+        "metadata": metadata_payload(result),
         "hosts": [
             {
                 "name": state.name,
@@ -43,6 +48,7 @@ def hosts_payload(result: CheckRunResult) -> dict:
 
 def groups_payload(result: CheckRunResult) -> dict:
     return {
+        "metadata": metadata_payload(result),
         "groups": [
             {
                 "name": state.name,
@@ -63,6 +69,7 @@ def groups_payload(result: CheckRunResult) -> dict:
 
 def systems_payload(result: CheckRunResult) -> dict:
     return {
+        "metadata": metadata_payload(result),
         "systems": [
             {
                 "name": state.name,

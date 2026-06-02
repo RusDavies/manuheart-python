@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from uuid import uuid4
 
 from manuheart.checkers import default_checkers
 from manuheart.models import (
@@ -20,12 +21,22 @@ from manuheart.models import (
     SystemState,
 )
 
+MAX_DETAIL_LENGTH = 500
+
 
 def _now(clock: ClockSource | None = None) -> str:
     if clock is None:
         return datetime.now(UTC).isoformat()
     value = clock() if callable(clock) else clock.now()
     return value.isoformat() if hasattr(value, "isoformat") else str(value)
+
+
+def _safe_detail(detail: str, max_length: int = MAX_DETAIL_LENGTH) -> str:
+    normalized = " ".join(str(detail).split())
+    if len(normalized) <= max_length:
+        return normalized
+    suffix = "…[truncated]"
+    return f"{normalized[: max_length - len(suffix)]}{suffix}"
 
 
 def update_host_state(
@@ -36,6 +47,7 @@ def update_host_state(
     now: str,
 ) -> HostState:
     base = previous or HostState(name=definition.name, group=definition.group, url=definition.url)
+    detail = _safe_detail(result.detail)
     if result.healthy:
         return HostState(
             name=definition.name,
@@ -45,7 +57,7 @@ def update_host_state(
             last_checked=now,
             fail_count=0,
             status=Status.UP,
-            detail=result.detail,
+            detail=detail,
         )
 
     fail_count = base.fail_count + 1
@@ -62,7 +74,7 @@ def update_host_state(
         last_checked=now,
         fail_count=fail_count,
         status=status,
-        detail=result.detail,
+        detail=detail,
     )
 
 
@@ -190,5 +202,7 @@ def run_health_cycle(
         hosts=host_states,
         groups=group_states,
         systems=system_states,
+        run_id=uuid4().hex,
+        generated_at=now,
         warnings=tuple(warnings),
     )

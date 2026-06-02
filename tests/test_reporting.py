@@ -310,7 +310,26 @@ def test_run_check_surfaces_previous_state_warnings(tmp_path):
     result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker()}, clock=lambda: "now")
 
     assert result.hosts["localhost-icmp/127.0.0.1"].status == Status.UP
-    assert result.warnings == (
+    assert (
         f"hoststatus: previous state file {loaded.effective.reports.hosts} "
-        "is invalid JSON; ignoring",
+        "is invalid JSON; ignoring"
+    ) in result.warnings
+    assert "group 'optional-example' has no hosts" not in result.warnings
+
+
+def test_reports_include_matching_run_metadata(tmp_path):
+    loaded = load_config("examples/localhost/manuheart.json")
+    result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker()}, clock=lambda: "now")
+    destinations = ReportDestinations(
+        hosts=tmp_path / "hoststatus",
+        groups=tmp_path / "groupstatus",
+        systems=tmp_path / "sysstatus",
     )
+    write_reports(result, destinations)
+
+    host_metadata = json.loads(destinations.hosts.read_text())["metadata"]
+    group_metadata = json.loads(destinations.groups.read_text())["metadata"]
+    system_metadata = json.loads(destinations.systems.read_text())["metadata"]
+
+    assert host_metadata == group_metadata == system_metadata
+    assert host_metadata == {"run_id": result.run_id, "generated_at": "now"}
