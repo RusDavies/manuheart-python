@@ -2,7 +2,7 @@ import json
 import subprocess
 import sys
 
-from manuheart.api import CheckResult, CheckType, load_config, run_check, write_reports
+from manuheart.api import CheckResult, CheckType, load_config, run_check, run_daemon, write_reports
 from manuheart.models import ConfigOverrides, ReportDestinations, Status
 
 
@@ -121,6 +121,38 @@ def test_daemon_max_cycles_for_bounded_smoke(tmp_path):
         text=True,
     )
     assert completed.returncode == 0, completed.stderr
+    assert "daemon cycle 1 completed" in completed.stderr
+    assert "daemon stopped after 1 cycle" in completed.stderr
+
+
+def test_run_daemon_emits_events_and_stops_cleanly_on_keyboard_interrupt(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={
+            "host_status_file": tmp_path / "hoststatus",
+            "group_status_file": tmp_path / "groupstatus",
+            "system_status_file": tmp_path / "sysstatus",
+        },
+    )
+    events = []
+
+    def interrupt(_seconds):
+        raise KeyboardInterrupt
+
+    cycles = run_daemon(
+        loaded,
+        checkers={CheckType.ICMP: FakeChecker(True)},
+        clock=lambda: "t1",
+        sleep=interrupt,
+        on_event=events.append,
+    )
+
+    assert cycles == 1
+    assert events == [
+        "daemon starting",
+        "daemon cycle 1 completed",
+        "daemon stopped after 1 cycle",
+    ]
 
 
 def test_cli_check_reports_operational_errors_without_traceback(tmp_path):

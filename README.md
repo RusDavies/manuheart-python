@@ -49,6 +49,12 @@ Compatibility-style legacy invocation:
 .venv/bin/python -m manuheart --once --config examples/localhost/manuheart.conf
 ```
 
+Daemon mode prints lifecycle/cycle messages to stderr and exits cleanly on keyboard interrupt:
+
+```bash
+.venv/bin/python -m manuheart daemon --config examples/localhost/manuheart.json
+```
+
 Use the library API directly:
 
 ```python
