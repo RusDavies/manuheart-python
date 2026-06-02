@@ -2,10 +2,10 @@
 
 ## Product process / Class 2 internal tool setup
 
-- [ ] Create lightweight product/problem framing.
-- [ ] Define requirements and acceptance criteria.
+- [x] Create lightweight product/problem framing.
+- [x] Define requirements and acceptance criteria.
 - [ ] Capture UX/workflow notes if a UI exists.
-- [ ] Capture security/privacy notes.
+- [x] Capture security/privacy notes.
 - [ ] Capture lightweight architecture/deployment notes.
 - [ ] Create implementation checklist.
 - [ ] Record basic QA evidence for completed work.
@@ -34,10 +34,10 @@
 - [x] Implement optional YAML configuration parser, preferably behind a `yaml` package extra.
 - [x] Add equivalence tests proving legacy, JSON, and YAML config can describe the same health model.
 - [x] Implement pure health rollup logic with fake-checker tests.
-- [ ] Implement CLI/API override application for config values and add precedence tests.
-- [ ] Implement real ICMP and HTTP(S) checkers.
-- [ ] Implement previous-state loading and atomic JSON report writing.
-- [ ] Implement CLI commands and compatibility flags as thin adapters over the public API.
-- [ ] Add tests proving CLI behavior matches API behavior for equivalent inputs.
-- [ ] Add smoke test for one-shot localhost run.
-- [ ] Add daemon mode only after one-shot mode is solid.
+- [x] Implement CLI/API override application for config values and add precedence tests.
+- [x] Implement real ICMP and HTTP(S) checkers.
+- [x] Implement previous-state loading and atomic JSON report writing.
+- [x] Implement CLI commands and compatibility flags as thin adapters over the public API.
+- [x] Add tests proving CLI behavior matches API behavior for equivalent inputs.
+- [x] Add smoke test for one-shot localhost run.
+- [x] Add daemon mode only after one-shot mode is solid.

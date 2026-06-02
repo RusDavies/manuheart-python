@@ -25,6 +25,7 @@ from manuheart.models import (
     ValidationResult,
 )
 from manuheart.reporting import write_reports as _write_reports
+from manuheart.state import load_previous_groups, load_previous_hosts, load_previous_systems
 
 __all__ = [
     "CheckResult",
@@ -46,6 +47,7 @@ __all__ = [
     "run_check_from_config",
     "validate_config",
     "write_reports",
+    "run_daemon",
 ]
 
 
@@ -83,7 +85,14 @@ def run_check(
 ) -> CheckRunResult:
     """Run one health-check cycle using a loaded configuration."""
 
-    return run_health_cycle(config, checkers=checkers, clock=clock)
+    return run_health_cycle(
+        config,
+        checkers=checkers,
+        clock=clock,
+        previous_hosts=load_previous_hosts(config.effective),
+        previous_groups=load_previous_groups(config.effective),
+        previous_systems=load_previous_systems(config.effective),
+    )
 
 
 def run_check_from_config(
@@ -107,3 +116,26 @@ def write_reports(result: CheckRunResult, destinations: ReportDestinations | Non
     """Write host, group, and system JSON reports atomically."""
 
     _write_reports(result, destinations=destinations)
+
+
+def run_daemon(
+    config: LoadedConfiguration,
+    *,
+    checkers: Mapping[CheckType, Any] | None = None,
+    clock: Any | None = None,
+    sleep: Any | None = None,
+    max_cycles: int | None = None,
+) -> int:
+    """Run repeated check cycles. Primarily used by the CLI daemon adapter."""
+
+    import time
+
+    sleeper = sleep or time.sleep
+    cycles = 0
+    while True:
+        result = run_check(config, checkers=checkers, clock=clock)
+        write_reports(result)
+        cycles += 1
+        if max_cycles is not None and cycles >= max_cycles:
+            return cycles
+        sleeper(config.effective.check_period)

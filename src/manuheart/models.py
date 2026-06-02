@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
@@ -34,6 +34,13 @@ class HttpCheckSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class IcmpCheckSettings:
+    timeout: float = 1.0
+    count: int = 1
+    privileged: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class ReportDestinations:
     hosts: Path
     groups: Path
@@ -59,6 +66,21 @@ class EffectiveConfig:
         )
     )
     http: HttpCheckSettings = field(default_factory=HttpCheckSettings)
+    icmp: IcmpCheckSettings = field(default_factory=IcmpCheckSettings)
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigOverrides:
+    var_dir: Path | None = None
+    log_file: Path | None = None
+    log_level: int | None = None
+    check_period: int | None = None
+    run_mode: str | None = None
+    host_file: Path | None = None
+    group_file: Path | None = None
+    host_status_file: Path | None = None
+    group_status_file: Path | None = None
+    system_status_file: Path | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,3 +174,9 @@ class CheckRunResult:
     groups: dict[str, GroupState]
     systems: dict[str, SystemState]
     warnings: tuple[str, ...] = ()
+
+
+def with_report_destinations(
+    config: EffectiveConfig, reports: ReportDestinations
+) -> EffectiveConfig:
+    return replace(config, reports=reports)
