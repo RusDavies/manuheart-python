@@ -68,7 +68,7 @@
 - [x] Implement documented host/group/system `unknown` and grace state semantics.
 - [x] Add stricter structured config validation for unknown keys and numeric bounds.
 - [x] Catch per-host checker crashes in the health engine and convert them to non-`up` check results.
-- [ ] Surface previous-state/report read degradation as warnings.
+- [x] Surface previous-state/report read degradation as warnings.
 - [ ] Clarify or adjust relative path semantics for status files.
 - [ ] Tighten public API typing around checker maps, clocks, sleepers, and daemon callbacks.
 - [ ] Consider adding checker detail fields to host reports.

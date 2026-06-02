@@ -146,11 +146,12 @@ def run_health_cycle(
     previous_hosts: Mapping[str, HostState] | None = None,
     previous_groups: Mapping[str, GroupState] | None = None,
     previous_systems: Mapping[str, SystemState] | None = None,
+    previous_warnings: tuple[str, ...] = (),
 ) -> CheckRunResult:
     now = _now(clock)
     checker_map = default_checkers(config.effective) if checkers is None else checkers
     host_states: dict[str, HostState] = {}
-    warnings = list(config.warnings)
+    warnings = [*config.warnings, *previous_warnings]
     try:
         for key in sorted(config.hosts):
             host = config.hosts[key]

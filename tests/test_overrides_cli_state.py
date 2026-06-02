@@ -183,6 +183,40 @@ def test_cli_check_reports_operational_errors_without_traceback(tmp_path):
     assert "Traceback" not in completed.stderr
 
 
+def test_cli_check_prints_previous_state_warnings(tmp_path):
+    hoststatus = tmp_path / "hoststatus"
+    groupstatus = tmp_path / "groupstatus"
+    sysstatus = tmp_path / "sysstatus"
+    hoststatus.write_text("not-json")
+    groupstatus.write_text(json.dumps({"groups": []}))
+    sysstatus.write_text(json.dumps({"systems": []}))
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "manuheart",
+            "check",
+            "--config",
+            "examples/localhost/manuheart.json",
+            "--host-status-file",
+            str(hoststatus),
+            "--group-status-file",
+            str(groupstatus),
+            "--sys-status-file",
+            str(sysstatus),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "WARNING:" in completed.stderr
+    assert "invalid JSON; ignoring" in completed.stderr
+    assert "Traceback" not in completed.stderr
+
+
 def test_cli_daemon_reports_config_errors_without_traceback():
     completed = subprocess.run(
         [

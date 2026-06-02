@@ -273,3 +273,17 @@ Pre-merge gate on branch `handle-checker-exceptions`:
 - `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
 
 Updated `run_health_cycle()` so checker lookup failures and checker exceptions are converted into per-host non-`up` check results with warnings instead of aborting the whole cycle. Added tests proving one exploding host check does not prevent other hosts/groups/systems from being reported, and that an explicitly empty injected checker map remains empty rather than silently falling back to default checkers.
+
+## Evidence for previous-state warning surfacing
+
+Pre-merge gate on branch `state-load-warnings`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart`: passed.
+- `pytest`: 67 passed.
+- `scripts/check_localhost_compatibility.py`: passed.
+- `scripts/check_dependency_security.py`: passed.
+- `scripts/check_clean_install.py`: passed.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+
+Added warning-aware previous-state loading. Malformed JSON, non-object report payloads, non-list report collections, non-object records, malformed integers, invalid booleans, invalid statuses, invalid check types, and missing identity fields now degrade safely and produce warnings. `run_check()` carries those warnings into `CheckRunResult.warnings`, and the CLI prints them to stderr for `check` runs.
