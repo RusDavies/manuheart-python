@@ -98,4 +98,4 @@
 - [x] Add GitHub Actions trusted-publishing workflow for TestPyPI/PyPI.
 - [x] Document PyPI/TestPyPI pending trusted-publisher setup fields.
 - [x] Add publish workflow policy check for trusted-publishing controls and tag/version alignment.
-- [ ] Pin all GitHub Actions workflow `uses:` entries to full 40-character immutable SHAs and add a policy check that rejects moving refs.
+- [x] Pin all GitHub Actions workflow `uses:` entries to full 40-character immutable SHAs and add a policy check that rejects moving refs.
