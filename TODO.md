@@ -97,3 +97,4 @@
 - [x] Confirm release-readiness gate includes lint, typecheck, tests, compatibility, dependency audit, public smoke validate/check, and clean install smoke.
 - [x] Add GitHub Actions trusted-publishing workflow for TestPyPI/PyPI.
 - [x] Document PyPI/TestPyPI pending trusted-publisher setup fields.
+- [x] Add publish workflow policy check for trusted-publishing controls and tag/version alignment.

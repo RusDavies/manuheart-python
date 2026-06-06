@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Security
+
+- Hardened the GitHub Actions PyPI release workflow to fail if the GitHub Release tag does not match `pyproject.toml` package version.
+- Added a local publish-workflow policy check covering trusted-publishing and tag/version-alignment requirements.
+
 ## v0.1.1 - PyPI trusted publishing release
 
 Status: public package publishing release.
