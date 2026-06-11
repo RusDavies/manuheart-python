@@ -16,6 +16,8 @@ rm -rf /tmp/manuheart-smoke
   --group-status-file /tmp/manuheart-smoke/groupstatus \
   --sys-status-file /tmp/manuheart-smoke/sysstatus
 .venv/bin/python scripts/check_localhost_compatibility.py
+.venv/bin/python scripts/check_dependency_security.py
+.venv/bin/python scripts/check_osv_scanner.py
 .venv/bin/python scripts/check_clean_install.py
 ```
 
@@ -173,6 +175,25 @@ Pre-merge gate on branch `dependency-security-gate`:
 - `scripts/check_clean_install.py`: passed and verifies installed package contains `manuheart/py.typed`.
 
 Added `pip-audit` to the development extra and added `scripts/check_dependency_security.py`, which audits the releasable dependency set from `pyproject.toml` while intentionally excluding dev-only tooling and the unpublished local package itself.
+
+## Evidence for pinned OSV scanner coverage
+
+Pre-merge gate on branch `add-osv-scanner-coverage`:
+
+- `ruff check src tests scripts`: passed.
+- `mypy src/manuheart scripts/check_osv_scanner.py scripts/install_osv_scanner.py`: passed with no issues across 13 source files.
+- `pytest`: 89 passed.
+- `scripts/check_publish_workflow_policy.py`: passed.
+- `scripts/check_dependency_security.py`: passed; no known vulnerabilities found.
+- `scripts/check_osv_scanner.py`: passed for resolved runtime requirements, resolved tooling requirements, and repository manifest scan.
+- `scripts/check_clean_install.py`: passed.
+- `scripts/check_localhost_compatibility.py`: passed and printed accepted migration differences.
+- `manuheart validate-config --config examples/deployment-test/public-smoke.json`: passed.
+- `manuheart check --config examples/deployment-test/public-smoke.json`: passed with disposable reports under `/tmp/manuheart-smoke`.
+- `python -m build`: built wheel and sdist successfully.
+- `twine check dist/*`: passed for wheel and sdist.
+
+Added `scripts/check_osv_scanner.py`, `scripts/install_osv_scanner.py`, and `tools/osv-scanner.lock.json`. The OSV gate resolves direct dependency ranges into temporary clean virtual environments before scanning exact frozen requirements, scans release/development tooling separately from runtime dependencies, and scans repository manifests. CI now runs the OSV gate in both `security.yml` and the release/publish build job.
 
 ## Evidence for remote repository and release posture decision
 

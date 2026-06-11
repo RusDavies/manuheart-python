@@ -98,4 +98,6 @@
 - [x] Add GitHub Actions trusted-publishing workflow for TestPyPI/PyPI.
 - [x] Document PyPI/TestPyPI pending trusted-publisher setup fields.
 - [x] Add publish workflow policy check for trusted-publishing controls and tag/version alignment.
+- [x] Add pinned OSV scanner coverage for runtime, optional, dev/release dependencies, and release workflow.
+- [ ] Consider promoting the OSV scanner coverage pattern into the workspace-wide security audit skill after this project-level exemplar settles.
 - [x] Pin all GitHub Actions workflow `uses:` entries to full 40-character immutable SHAs and add a policy check that rejects moving refs.

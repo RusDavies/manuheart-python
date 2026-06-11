@@ -51,6 +51,7 @@ Before any internal release artifact is treated as releasable, run:
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/check_localhost_compatibility.py
 .venv/bin/python scripts/check_dependency_security.py
+.venv/bin/python scripts/check_osv_scanner.py
 .venv/bin/python -m manuheart validate-config --config examples/deployment-test/public-smoke.json
 .venv/bin/python -m manuheart check --config examples/deployment-test/public-smoke.json
 .venv/bin/python scripts/check_clean_install.py

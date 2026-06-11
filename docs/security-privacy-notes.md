@@ -30,10 +30,15 @@ Manuheart configuration and reports may contain internal hostnames, IP addresses
 
 Dependencies should be reviewed during release readiness because tiny internal tools still deserve not to become dependency confetti cannons.
 
-Release-readiness dependency gate:
+Release-readiness dependency gates:
 
 ```bash
 .venv/bin/python scripts/check_dependency_security.py
+.venv/bin/python scripts/check_osv_scanner.py
 ```
 
-The script audits the releasable dependency set from `pyproject.toml`: normal runtime dependencies plus the optional YAML runtime extra. It intentionally excludes development tooling and the local unpublished package itself.
+`check_dependency_security.py` audits the releasable dependency set from `pyproject.toml`: normal runtime dependencies plus the optional YAML runtime extra. It intentionally excludes development tooling and the local unpublished package itself.
+
+`check_osv_scanner.py` adds OSV database coverage for the runtime dependency set, the release/development tooling dependency set, and repository manifests. The script resolves the direct dependency ranges in temporary clean virtual environments and scans exact `pip freeze --all` outputs, so OSV evaluates a concrete install set instead of the oldest version satisfying a loose range. CI installs OSV Scanner from `tools/osv-scanner.lock.json`, which pins the release asset URL and SHA-256 instead of trusting a moving installer or `latest` URL.
+
+`idna>=3.15` is an explicit runtime constraint because `httpx` can otherwise resolve older transitive `idna` versions affected by GHSA-65pc-fj4g-8rjx / CVE-2026-45409. The direct constraint keeps both `pip-audit` and OSV resolution on the patched line.
