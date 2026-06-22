@@ -135,6 +135,7 @@ def scan_requirements(scanner: str, paths: dict[str, Path]) -> int:
                     "source",
                     "--lockfile",
                     str(path),
+                    "--no-resolve",
                     "--format",
                     "json",
                     "--verbosity",
