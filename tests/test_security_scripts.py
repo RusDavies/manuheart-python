@@ -35,6 +35,38 @@ def test_requirements_inputs_are_named_for_osv_extraction(tmp_path: Path) -> Non
     assert paths["runtime"].read_text(encoding="utf-8").endswith("\n")
 
 
+def test_osv_dependency_scan_uses_resolved_lockfiles_without_reresolving(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lockfile = tmp_path / "runtime-requirements.txt"
+    lockfile.write_text("pytest==9.0.3\n", encoding="utf-8")
+    calls: list[tuple[str, list[str]]] = []
+
+    def fake_run(scanner: str, args: list[str]) -> int:
+        calls.append((scanner, args))
+        return 0
+
+    monkeypatch.setattr(check_osv_scanner, "run", fake_run)
+
+    assert check_osv_scanner.scan_requirements("osv-scanner", {"runtime": lockfile}) == 0
+    assert calls == [
+        (
+            "osv-scanner",
+            [
+                "scan",
+                "source",
+                "--lockfile",
+                str(lockfile),
+                "--no-resolve",
+                "--format",
+                "json",
+                "--verbosity",
+                "error",
+            ],
+        )
+    ]
+
+
 def test_osv_scanner_path_prefers_explicit_path() -> None:
     assert check_osv_scanner.scanner_path("/tmp/osv-scanner-test") == "/tmp/osv-scanner-test"
 
