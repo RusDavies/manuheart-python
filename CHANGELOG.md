@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v0.1.2 - Security scan coverage hardening
+
+Status: public package publishing release.
+
 ### Security
 
 - Fixed the OSV repository-manifest scan to include the current git root with OSV Scanner 2.3.x.

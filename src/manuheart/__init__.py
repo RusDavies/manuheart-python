@@ -4,5 +4,5 @@
 from manuheart.api import __all__ as _api_all
 from manuheart.api import *  # noqa: F403
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __all__ = [*_api_all, "__version__"]
