@@ -67,6 +67,22 @@ def test_osv_dependency_scan_uses_resolved_lockfiles_without_reresolving(
     ]
 
 
+def test_osv_repository_scan_includes_git_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[tuple[str, list[str]]] = []
+
+    def fake_run(scanner: str, args: list[str]) -> int:
+        calls.append((scanner, args))
+        return 0
+
+    monkeypatch.setattr(check_osv_scanner, "run", fake_run)
+
+    assert check_osv_scanner.scan_repository("osv-scanner") == 0
+    assert calls
+    args = calls[0][1]
+    assert "--include-git-root" in args
+    assert args[-1] == "."
+
+
 def test_osv_scanner_path_prefers_explicit_path() -> None:
     assert check_osv_scanner.scanner_path("/tmp/osv-scanner-test") == "/tmp/osv-scanner-test"
 

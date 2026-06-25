@@ -4,6 +4,7 @@
 
 ### Security
 
+- Fixed the OSV repository-manifest scan to include the current git root with OSV Scanner 2.3.x.
 - Fixed OSV Scanner dependency-gate handling so generated resolved requirement lockfiles are scanned directly without a second resolver pass.
 - Hardened the GitHub Actions PyPI release workflow to fail if the GitHub Release tag does not match `pyproject.toml` package version.
 - Added a local publish-workflow policy check covering trusted-publishing and tag/version-alignment requirements.

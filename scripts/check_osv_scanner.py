@@ -152,6 +152,7 @@ def scan_repository(scanner: str) -> int:
         "scan",
         "source",
         "--recursive",
+        "--include-git-root",
         "--allow-no-lockfiles",
         "--format",
         "json",
