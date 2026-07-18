@@ -27,6 +27,10 @@ def test_osv_tooling_dependencies_include_release_and_dev_extras() -> None:
     assert len(requirements) == len(set(requirements))
 
 
+def test_osv_resolved_environments_upgrade_vulnerable_bootstrap_tools() -> None:
+    assert "setuptools>=83.0.0" in check_osv_scanner.BOOTSTRAP_REQUIREMENTS
+
+
 def test_requirements_inputs_are_named_for_osv_extraction(tmp_path: Path) -> None:
     paths = check_osv_scanner.requirements_inputs(tmp_path)
 

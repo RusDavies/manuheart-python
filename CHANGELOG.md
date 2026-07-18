@@ -6,6 +6,7 @@
 
 - Updated pinned GitHub Actions workflow actions to Node.js 24-native revisions while preserving full-SHA pinning and trusted-publishing controls.
 - Constrained release/dev tooling to `setuptools>=83.0.0` after OSV reported `PYSEC-2026-3447` / `GHSA-h35f-9h28-mq5c` in the CI tooling lock.
+- Updated the OSV helper to upgrade temporary scanner-venv bootstrap tooling before freezing dependency evidence.
 
 ## v0.1.2 - Security scan coverage hardening
 

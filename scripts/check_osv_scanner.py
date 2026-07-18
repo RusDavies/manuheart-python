@@ -20,6 +20,7 @@ PYPROJECT = ROOT / "pyproject.toml"
 LOCAL_SCANNER = ROOT / ".tools" / "osv-scanner"
 RUNTIME_EXTRAS = ("yaml",)
 TOOLING_EXTRAS = ("release", "dev")
+BOOTSTRAP_REQUIREMENTS = ("pip", "setuptools>=83.0.0")
 REPO_EXCLUDES = (
     ".git",
     ".mypy_cache",
@@ -75,7 +76,10 @@ def resolve_requirements(name: str, direct_path: Path, directory: Path) -> Path:
     environment = directory / f"{name}-venv"
     venv.EnvBuilder(with_pip=True).create(environment)
     python = venv_python(environment)
-    subprocess.run([str(python), "-m", "pip", "install", "-q", "--upgrade", "pip"], check=True)
+    subprocess.run(
+        [str(python), "-m", "pip", "install", "-q", "--upgrade", *BOOTSTRAP_REQUIREMENTS],
+        check=True,
+    )
     subprocess.run(
         [str(python), "-m", "pip", "install", "-q", "--upgrade", "-r", str(direct_path)],
         check=True,
