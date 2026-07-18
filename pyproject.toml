@@ -22,6 +22,7 @@ dependencies = [
 yaml = ["PyYAML>=6.0"]
 release = [
   "build>=1.2",
+  "setuptools>=83.0.0",
   "twine>=5.1",
 ]
 dev = [
@@ -31,6 +32,7 @@ dev = [
   "types-PyYAML>=6.0",
   "pip-audit>=2.10",
   "build>=1.2",
+  "setuptools>=83.0.0",
   "twine>=5.1",
 ]
 

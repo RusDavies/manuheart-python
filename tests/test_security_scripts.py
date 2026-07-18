@@ -23,6 +23,7 @@ def test_osv_tooling_dependencies_include_release_and_dev_extras() -> None:
     assert "build>=1.2" in requirements
     assert "twine>=5.1" in requirements
     assert "pip-audit>=2.10" in requirements
+    assert "setuptools>=83.0.0" in requirements
     assert len(requirements) == len(set(requirements))
 
 
