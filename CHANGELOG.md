@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-No unreleased changes yet.
+### Security
+
+- Updated pinned GitHub Actions workflow actions to Node.js 24-native revisions while preserving full-SHA pinning and trusted-publishing controls.
 
 ## v0.1.2 - Security scan coverage hardening
 

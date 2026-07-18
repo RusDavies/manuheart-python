@@ -101,4 +101,4 @@
 - [x] Add pinned OSV scanner coverage for runtime, optional, dev/release dependencies, and release workflow.
 - [x] Promote the OSV scanner coverage pattern into the workspace-wide security audit skill after this project-level exemplar settles.
 - [x] Pin all GitHub Actions workflow `uses:` entries to full 40-character immutable SHAs and add a policy check that rejects moving refs.
-- [ ] Monitor and update pinned GitHub Actions SHAs to Node.js 24-native action revisions before Node.js 20 action compatibility removal affects the security workflow.
+- [x] Monitor and update pinned GitHub Actions SHAs to Node.js 24-native action revisions before Node.js 20 action compatibility removal affects the security workflow.
