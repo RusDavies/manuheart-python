@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v0.1.3 - Release tooling security hardening
+
+Status: public package publishing release.
+
 ### Security
 
 - Updated pinned GitHub Actions workflow actions to Node.js 24-native revisions while preserving full-SHA pinning and trusted-publishing controls.
