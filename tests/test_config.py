@@ -104,6 +104,58 @@ def test_structured_config_validates_http_host_url(tmp_path):
         load_config(config)
 
 
+def test_structured_config_requires_https_url_for_https_group(tmp_path):
+    config = tmp_path / "bad.json"
+    config.write_text(
+        """
+        {
+          "groups": [
+            {
+              "name": "secure-web",
+              "system": "s",
+              "critical": true,
+              "type": "https",
+              "min_count": 1,
+              "failure_grace": 1
+            }
+          ],
+          "hosts": [
+            {"name": "web-a", "group": "secure-web", "url": "http://example.test/health"}
+          ]
+        }
+        """
+    )
+    with pytest.raises(ConfigError, match=r"hosts\[0\] URL must start with https://"):
+        load_config(config)
+
+
+def test_structured_config_allows_https_url_for_http_group(tmp_path):
+    config = tmp_path / "config.json"
+    config.write_text(
+        """
+        {
+          "groups": [
+            {
+              "name": "web",
+              "system": "s",
+              "critical": true,
+              "type": "http",
+              "min_count": 1,
+              "failure_grace": 1
+            }
+          ],
+          "hosts": [
+            {"name": "web-a", "group": "web", "url": "https://example.test/health"}
+          ]
+        }
+        """
+    )
+
+    loaded = load_config(config)
+
+    assert loaded.hosts["web/web-a"].url == "https://example.test/health"
+
+
 def test_structured_runtime_sections_must_be_objects(tmp_path):
     config = tmp_path / "bad.json"
     config.write_text('{"runtime": [], "groups": [], "hosts": []}')

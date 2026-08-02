@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes yet.
+### Security
+
+- Require `https://` URLs for groups declared with `type: "https"` so a secure-check
+  configuration cannot silently run over plaintext HTTP.
 
 ## v0.1.3 - Release tooling security hardening
 

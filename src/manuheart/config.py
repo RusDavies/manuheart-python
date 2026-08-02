@@ -299,10 +299,13 @@ def _structured_definitions(
             raise ConfigError(f"host {host_definition.key!r} references unknown group")
         if host_definition.key in hosts:
             raise ConfigError(f"duplicate host {host_definition.key!r}")
-        if groups[host_definition.group].check_type in {
-            CheckType.HTTP,
-            CheckType.HTTPS,
-        } and not host_definition.url.startswith(("http://", "https://")):
+        group_check_type = groups[host_definition.group].check_type
+        if group_check_type == CheckType.HTTPS and not host_definition.url.startswith("https://"):
+            raise ConfigError(f"{path} URL must start with https://")
+        if (
+            group_check_type == CheckType.HTTP
+            and not host_definition.url.startswith(("http://", "https://"))
+        ):
             raise ConfigError(f"{path} URL must start with http:// or https://")
         hosts[host_definition.key] = host_definition
     return groups, hosts
