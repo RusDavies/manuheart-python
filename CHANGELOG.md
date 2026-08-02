@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v0.1.4 - HTTPS configuration validation hardening
+
+Status: public package publishing release.
+
 ### Security
 
 - Require `https://` URLs for groups declared with `type: "https"` so a secure-check
