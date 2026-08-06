@@ -187,3 +187,31 @@ def test_http_checker_rejects_invalid_runtime_method():
 
     assert result.healthy is False
     assert "invalid http method" in result.detail
+
+
+def test_https_checker_rejects_plain_http_start_url():
+    result = HttpChecker(EffectiveConfig(), client=object()).check(
+        HostDefinition("example", "g", "http://example.test/health"),
+        group(CheckType.HTTPS),
+    )
+
+    assert result.healthy is False
+    assert result.detail == "invalid https url"
+
+
+def test_https_checker_rejects_redirect_downgrade_to_http():
+    class FakeResponse:
+        status_code = 200
+        url = "http://example.test/health"
+
+    class FakeClient:
+        def request(self, method, url):
+            return FakeResponse()
+
+    result = HttpChecker(EffectiveConfig(), client=FakeClient()).check(
+        HostDefinition("example", "g", "https://example.test/health"),
+        group(CheckType.HTTPS),
+    )
+
+    assert result.healthy is False
+    assert result.detail == "https check redirected to non-https url"

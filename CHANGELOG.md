@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes yet.
+### Security
+
+- Reject HTTPS health checks that redirect to a non-HTTPS final URL, preserving the
+  secure-check guarantee across redirects.
 
 ## v0.1.4 - HTTPS configuration validation hardening
 

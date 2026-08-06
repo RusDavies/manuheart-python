@@ -5,11 +5,18 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from icmplib import ping
 
-from manuheart.models import CheckResult, EffectiveConfig, GroupDefinition, HostDefinition
+from manuheart.models import (
+    CheckResult,
+    CheckType,
+    EffectiveConfig,
+    GroupDefinition,
+    HostDefinition,
+)
 
 _HOST_RE = re.compile(r"^[A-Za-z0-9_.:-]+$")
 _HEAD_FALLBACK_STATUS_CODES = {405, 501}
@@ -56,7 +63,9 @@ class HttpChecker:
         if self.close_client and self.client is not None and hasattr(self.client, "close"):
             self.client.close()
 
-    def _check_with_client(self, client: Any, host: HostDefinition) -> CheckResult:
+    def _check_with_client(
+        self, client: Any, host: HostDefinition, group: GroupDefinition
+    ) -> CheckResult:
         method = self.config.http.method.upper()
         if method not in {"HEAD", "GET"}:
             return CheckResult(False, f"invalid http method {method!r}")
@@ -67,19 +76,24 @@ class HttpChecker:
             and response.status_code in _HEAD_FALLBACK_STATUS_CODES
         ):
             response = client.get(host.url)
+        if group.check_type == CheckType.HTTPS:
+            final_url = getattr(response, "url", host.url)
+            if urlsplit(str(final_url)).scheme != "https":
+                return CheckResult(False, "https check redirected to non-https url")
         return CheckResult(
             200 <= response.status_code <= 299, f"http status {response.status_code}"
         )
 
     def check(self, host: HostDefinition, group: GroupDefinition) -> CheckResult:
-        _ = group
+        if group.check_type == CheckType.HTTPS and not host.url.startswith("https://"):
+            return CheckResult(False, "invalid https url")
         if not host.url.startswith(("http://", "https://")):
             return CheckResult(False, "invalid url")
         try:
             if self.client is not None:
-                return self._check_with_client(self.client, host)
+                return self._check_with_client(self.client, host, group)
             with httpx.Client(follow_redirects=True, timeout=_http_timeout(self.config)) as client:
-                return self._check_with_client(client, host)
+                return self._check_with_client(client, host, group)
         except httpx.HTTPError as exc:
             return CheckResult(False, str(exc))
 
