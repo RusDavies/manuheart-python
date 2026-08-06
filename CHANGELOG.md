@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v0.1.5 - HTTPS redirect downgrade hardening
+
+Status: public package publishing release.
+
 ### Security
 
 - Reject HTTPS health checks that redirect to a non-HTTPS final URL, preserving the
