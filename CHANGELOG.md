@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes yet.
+### Fixed
+
+- Constrained the Hatchling build backend range so isolated release builds keep
+  producing distribution metadata accepted by the Twine publish-readiness gate.
 
 ## v0.1.5 - HTTPS redirect downgrade hardening
 
