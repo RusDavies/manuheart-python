@@ -2,10 +2,19 @@ from __future__ import annotations
 
 import json
 import stat
+import tomllib
 from pathlib import Path
 
 import pytest
 from scripts import check_osv_scanner, install_osv_scanner
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_build_backend_range_preserves_twine_metadata_gate() -> None:
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+
+    assert "hatchling>=1.21,<1.27" in data["build-system"]["requires"]
 
 
 def test_osv_runtime_dependencies_include_yaml_extra_and_idna_constraint() -> None:
