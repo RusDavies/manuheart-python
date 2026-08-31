@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+Nothing yet.
+
+## v0.1.6 - Persisted output URL redaction
+
+Status: public package publishing release.
+
 ### Fixed
 
 - Redacted URL userinfo and common token query parameters from persisted host
