@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 from manuheart.models import CheckRunResult, ReportDestinations
+from manuheart.redaction import redact_url
 
 
 def metadata_payload(result: CheckRunResult) -> dict:
@@ -34,7 +35,7 @@ def hosts_payload(result: CheckRunResult) -> dict:
             {
                 "name": state.name,
                 "group": state.group,
-                "url": state.url,
+                "url": redact_url(state.url),
                 "last_up": state.last_up,
                 "last_checked": state.last_checked,
                 "fail_count": state.fail_count,

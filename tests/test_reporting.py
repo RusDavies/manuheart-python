@@ -1,7 +1,7 @@
 import json
 
 from manuheart.api import CheckResult, CheckType, load_config, run_check, write_reports
-from manuheart.models import ReportDestinations, Status
+from manuheart.models import HostDefinition, ReportDestinations, Status
 from manuheart.state import (
     load_previous_groups,
     load_previous_hosts,
@@ -333,3 +333,29 @@ def test_reports_include_matching_run_metadata(tmp_path):
 
     assert host_metadata == group_metadata == system_metadata
     assert host_metadata == {"run_id": result.run_id, "generated_at": "now"}
+
+
+def test_host_reports_redact_url_credentials_and_token_queries(tmp_path):
+    loaded = load_config(
+        "examples/localhost/manuheart.json",
+        overrides={
+            "host_status_file": tmp_path / "hoststatus",
+            "group_status_file": tmp_path / "groupstatus",
+            "system_status_file": tmp_path / "sysstatus",
+        },
+    )
+    host = loaded.hosts["localhost-icmp/127.0.0.1"]
+    loaded.hosts["localhost-icmp/127.0.0.1"] = HostDefinition(
+        name=host.name,
+        group=host.group,
+        url="https://user:pass@example.test/health?token=abc&ok=yes&api_key=def",
+    )
+    result = run_check(loaded, checkers={CheckType.ICMP: FakeChecker()}, clock=lambda: "now")
+    write_reports(result)
+
+    persisted_host = json.loads(loaded.effective.reports.hosts.read_text())["hosts"][0]
+
+    assert persisted_host["url"] == (
+        "https://[redacted]@example.test/health?"
+        "token=%5Bredacted%5D&ok=yes&api_key=%5Bredacted%5D"
+    )

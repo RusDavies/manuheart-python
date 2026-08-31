@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Redacted URL userinfo and common token query parameters from persisted host
+  reports and checker detail output.
 - Constrained the Hatchling build backend range so isolated release builds keep
   producing distribution metadata accepted by the Twine publish-readiness gate.
 

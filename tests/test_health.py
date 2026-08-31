@@ -288,3 +288,42 @@ def test_default_http_checker_reuses_one_client_per_cycle(tmp_path, monkeypatch)
         ("HEAD", "http://example.test/a"),
         ("HEAD", "https://example.test/a"),
     ]
+
+
+def test_checker_details_redact_url_secrets(tmp_path):
+    config = tmp_path / "manuheart.json"
+    config.write_text(
+        json.dumps(
+            {
+                "groups": [
+                    {
+                        "name": "web",
+                        "system": "public",
+                        "critical": True,
+                        "type": "https",
+                        "min_count": 1,
+                        "failure_grace": 0,
+                    }
+                ],
+                "hosts": [
+                    {"name": "api", "group": "web", "url": "https://example.test/health"}
+                ],
+            }
+        )
+    )
+
+    class LeakyChecker:
+        def check(self, host, group):
+            return CheckResult(
+                False,
+                "failed https://user:pass@example.test/health?token=abc&safe=yes",
+            )
+
+    result = run_check(
+        load_config(config), checkers={CheckType.HTTPS: LeakyChecker()}, clock=lambda: "now"
+    )
+
+    assert result.hosts["web/api"].detail == (
+        "failed https://[redacted]@example.test/health?"
+        "token=%5Bredacted%5D&safe=yes"
+    )
