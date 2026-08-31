@@ -20,6 +20,7 @@ from manuheart.models import (
     Status,
     SystemState,
 )
+from manuheart.redaction import redact_urls_in_text
 
 MAX_DETAIL_LENGTH = 500
 
@@ -32,7 +33,7 @@ def _now(clock: ClockSource | None = None) -> str:
 
 
 def _safe_detail(detail: str, max_length: int = MAX_DETAIL_LENGTH) -> str:
-    normalized = " ".join(str(detail).split())
+    normalized = redact_urls_in_text(" ".join(str(detail).split()))
     if len(normalized) <= max_length:
         return normalized
     suffix = "…[truncated]"
